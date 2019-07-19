@@ -21,10 +21,10 @@ import Data.Primitive (ByteArray)
 import Data.Primitive.Addr (Addr(Addr))
 import Chronos (Year(..),Month(..),Datetime(..),TimeOfDay(..))
 import Chronos (DayOfMonth(..),Date(..))
-import Data.Bytes.Parser (Parser)
+import Data.Bytes.Parser (Parser,Parser#)
 import Data.Word (Word64,Word32,Word16,Word,Word8)
-import Net.Types (IPv4,IP)
-import GHC.Exts (Ptr(Ptr),Int(I#),Int#,Addr#)
+import Net.Types (IPv4(..),IP)
+import GHC.Exts (Ptr(Ptr),Int(I#),Int#,Addr#,Word#,coerce)
 import Control.Exception (Exception)
 import qualified Control.Exception
 import qualified Data.Primitive as PM
@@ -615,7 +615,12 @@ parserTraffic syslogHost receiveTime serialNumber = do
     }
 
 parserIPv4 :: e -> Parser e s IPv4
-parserIPv4 e = do
+{-# inline parserIPv4 #-}
+parserIPv4 e = coerce (P.boxWord32 (parserIPv4# e))
+
+parserIPv4# :: e -> Parser# e s Word#
+{-# noinline parserIPv4# #-}
+parserIPv4# e = P.unboxWord32 $ do
   !a <- P.decWord8 e
   P.ascii e '.'
   !b <- P.decWord8 e
@@ -624,7 +629,7 @@ parserIPv4 e = do
   P.ascii e '.'
   !d <- P.decWord8 e
   P.ascii e ','
-  pure (IPv4.fromOctets a b c d)
+  pure (getIPv4 (IPv4.fromOctets a b c d))
 
 parserDatetime :: e -> e -> Parser e s Datetime
 {-# noinline parserDatetime #-}
