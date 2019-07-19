@@ -50,9 +50,9 @@ data Traffic = Traffic
     -- prefixes the message.
   , receiveTime :: {-# UNPACK #-} !Datetime
     -- In log, presented as: 2019/06/18 15:10:20
-  , serialNumber :: !Word64
+  , serialNumber :: {-# UNPACK #-} !Word64
     -- In log, presented as: 002610378847
-  , subtype :: !Bounds
+  , subtype :: {-# UNPACK #-} !Bounds
     -- Presented as: start, end, drop, and deny
   , timeGenerated :: {-# UNPACK #-} !Datetime
     -- Presented as: 2018/04/11 23:19:22
@@ -72,24 +72,24 @@ data Traffic = Traffic
   , logAction :: {-# UNPACK #-} !Bounds
   , sessionId :: {-# UNPACK #-} !Word64
   , repeatCount :: {-# UNPACK #-} !Word64
-  , sourcePort :: !Word16
-  , destinationPort :: !Word16
-  , natSourcePort :: !Word16
-  , natDestinationPort :: !Word16
-  , flags :: !Word32
+  , sourcePort :: {-# UNPACK #-} !Word16
+  , destinationPort :: {-# UNPACK #-} !Word16
+  , natSourcePort :: {-# UNPACK #-} !Word16
+  , natDestinationPort :: {-# UNPACK #-} !Word16
+  , flags :: {-# UNPACK #-} !Word32
     -- Presented as: 0x400053
   , ipProtocol :: {-# UNPACK #-} !Bounds
     -- Presented as: tcp, udp, etc.
   , action :: {-# UNPACK #-} !Bounds
-  , bytes :: !Word64
-  , bytesSent :: !Word64
-  , bytesReceived :: !Word64
-  , packets :: !Word64
+  , bytes :: {-# UNPACK #-} !Word64
+  , bytesSent :: {-# UNPACK #-} !Word64
+  , bytesReceived :: {-# UNPACK #-} !Word64
+  , packets :: {-# UNPACK #-} !Word64
   , startTime :: {-# UNPACK #-} !Datetime
-  , elapsedTime :: !Word64
+  , elapsedTime :: {-# UNPACK #-} !Word64
   , category :: {-# UNPACK #-} !Bounds
-  , sequenceNumber :: !Word64
-  , actionFlags :: !Word64
+  , sequenceNumber :: {-# UNPACK #-} !Word64
+  , actionFlags :: {-# UNPACK #-} !Word64
     -- Presented as: 0x8000000000000000
   , sourceCountry :: {-# UNPACK #-} !Bounds
   , destinationCountry :: {-# UNPACK #-} !Bounds
@@ -438,7 +438,7 @@ skipThroughComma :: e -> Parser e s ()
 skipThroughComma e = P.skipUntilAsciiConsume e ','
 
 -- This does not require that any digits are
--- actuall present.
+-- actually present.
 skipDigitsThroughComma :: e -> Parser e s ()
 {-# inline skipDigitsThroughComma #-}
 skipDigitsThroughComma e =
@@ -493,7 +493,9 @@ parserPrefix = do
   P.ascii serialNumberField ','
   pure (hostBounds,recv,ser)
 
--- | Decode a PAN-OS syslog message.
+-- | Decode a PAN-OS syslog message. This fails without attempting
+-- to parse the message if the 'ByteArray' is has 16384 or more
+-- bytes.
 decodeLog :: ByteArray -> Either Field Log
 decodeLog b
   -- These logs have to fit in a UDP packet, so it is effectively
@@ -625,6 +627,7 @@ parserIPv4 e = do
   pure (IPv4.fromOctets a b c d)
 
 parserDatetime :: e -> e -> Parser e s Datetime
+{-# noinline parserDatetime #-}
 parserDatetime edate etime = do
   year <- P.decWord edate
   P.ascii edate '/'
@@ -650,13 +653,9 @@ parserDatetime edate etime = do
       (1_000_000_000 * fromIntegral second)
     )
 
-
-
 cstringLen# :: Addr# -> Int#
 {-# noinline cstringLen# #-}
 cstringLen# ptr = go 0 where
   go !ix@(I# ix#) = if PM.indexOffPtr (Ptr ptr) ix == (0 :: Word8)
     then ix#
     else go (ix + 1)
-
-
