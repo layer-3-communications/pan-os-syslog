@@ -1,22 +1,26 @@
 {-# language BangPatterns #-}
+{-# language DerivingStrategies #-}
+{-# language DuplicateRecordFields #-}
+{-# language GeneralizedNewtypeDeriving #-}
+{-# language LambdaCase #-}
 {-# language MagicHash #-}
 {-# language NamedFieldPuns #-}
-{-# language DuplicateRecordFields #-}
 {-# language NumericUnderscores #-}
-{-# language DerivingStrategies #-}
-{-# language GeneralizedNewtypeDeriving #-}
+{-# language ScopedTypeVariables #-}
 
 module Panos.Syslog.Unsafe
   ( -- * Types
     Log(..)
   , Traffic(..)
+  , Threat(..)
   , Field(..)
   , Bounds(..)
     -- * Decoding
   , decodeLog
   ) where
 
-import Data.Bytes.Types (UnmanagedBytes(UnmanagedBytes))
+import Data.Bytes.Types (Bytes(..),UnmanagedBytes(UnmanagedBytes))
+import Data.Char (ord)
 import Data.Primitive (ByteArray)
 import Data.Primitive.Addr (Addr(Addr))
 import Chronos (Year(..),Month(..),Datetime(..),TimeOfDay(..))
@@ -26,6 +30,7 @@ import Data.Word (Word64,Word32,Word16,Word,Word8)
 import Net.Types (IPv4(..),IP)
 import GHC.Exts (Ptr(Ptr),Int(I#),Int#,Addr#,Word#,coerce)
 import Control.Exception (Exception)
+import Control.Monad.ST.Run (runByteArrayST)
 import qualified Control.Exception
 import qualified Data.Primitive as PM
 import qualified Data.Primitive.Ptr as PM
@@ -36,6 +41,7 @@ import qualified GHC.Pack
 
 data Log
   = LogTraffic !Traffic
+  | LogThreat !Threat
   | LogOther
 
 data Bounds = Bounds
@@ -96,13 +102,109 @@ data Traffic = Traffic
   , packetsSent :: {-# UNPACK #-} !Word64
   , packetsReceived :: {-# UNPACK #-} !Word64
   , sessionEndReason :: {-# UNPACK #-} !Bounds
-  , deviceGroupHierarchyLevel1 :: {-# UNPACK #-} !Bounds
-  , deviceGroupHierarchyLevel2 :: {-# UNPACK #-} !Bounds
-  , deviceGroupHierarchyLevel3 :: {-# UNPACK #-} !Bounds
-  , deviceGroupHierarchyLevel4 :: {-# UNPACK #-} !Bounds
+  , deviceGroupHierarchyLevel1 :: {-# UNPACK #-} !Word64
+  , deviceGroupHierarchyLevel2 :: {-# UNPACK #-} !Word64
+  , deviceGroupHierarchyLevel3 :: {-# UNPACK #-} !Word64
+  , deviceGroupHierarchyLevel4 :: {-# UNPACK #-} !Word64
   , virtualSystemName :: {-# UNPACK #-} !Bounds
   , deviceName :: {-# UNPACK #-} !Bounds
   , actionSource :: {-# UNPACK #-} !Bounds
+  }
+
+data Threat = Threat
+  { message :: {-# UNPACK #-} !ByteArray
+    -- The original log
+  , syslogHost :: {-# UNPACK #-} !Bounds
+    -- The host as presented in the syslog preamble that
+    -- prefixes the message.
+  , receiveTime :: {-# UNPACK #-} !Datetime
+    -- In log, presented as: 2019/06/18 15:10:20
+  , serialNumber :: {-# UNPACK #-} !Word64
+    -- In log, presented as: 002610378847
+  , subtype :: {-# UNPACK #-} !Bounds
+    -- Presented as: start, end, drop, and deny
+  , timeGenerated :: {-# UNPACK #-} !Datetime
+    -- Presented as: 2018/04/11 23:19:22
+  , sourceAddress :: {-# UNPACK #-} !IP
+  , destinationAddress :: {-# UNPACK #-} !IP
+  , natSourceIp :: {-# UNPACK #-} !IP
+  , natDestinationIp :: {-# UNPACK #-} !IP
+  , ruleName :: {-# UNPACK #-} !Bounds
+  , sourceUser :: {-# UNPACK #-} !Bounds
+  , destinationUser :: {-# UNPACK #-} !Bounds
+  , application :: {-# UNPACK #-} !Bounds
+  , virtualSystem :: {-# UNPACK #-} !Bounds
+  , sourceZone :: {-# UNPACK #-} !Bounds
+  , destinationZone :: {-# UNPACK #-} !Bounds
+  , inboundInterface :: {-# UNPACK #-} !Bounds
+  , outboundInterface :: {-# UNPACK #-} !Bounds
+  , logAction :: {-# UNPACK #-} !Bounds
+  , sessionId :: {-# UNPACK #-} !Word64
+  , repeatCount :: {-# UNPACK #-} !Word64
+  , sourcePort :: {-# UNPACK #-} !Word16
+  , destinationPort :: {-# UNPACK #-} !Word16
+  , natSourcePort :: {-# UNPACK #-} !Word16
+  , natDestinationPort :: {-# UNPACK #-} !Word16
+  , action :: {-# UNPACK #-} !Bounds
+  , ipProtocol :: {-# UNPACK #-} !Bounds
+  , flags :: {-# UNPACK #-} !Word32
+  , miscellaneousBounds :: {-# UNPACK #-} !Bounds
+  , miscellaneousByteArray :: {-# UNPACK #-} !ByteArray
+  , threatName :: {-# UNPACK #-} !Bounds
+  , threatId :: {-# UNPACK #-} !Word64
+  , category :: {-# UNPACK #-} !Bounds
+  , severity :: {-# UNPACK #-} !Bounds
+  , direction :: {-# UNPACK #-} !Bounds
+  , sequenceNumber :: {-# UNPACK #-} !Word64
+  , actionFlags :: {-# UNPACK #-} !Word64
+    -- Presented as: 0x8000000000000000
+  , sourceCountry :: {-# UNPACK #-} !Bounds
+  , destinationCountry :: {-# UNPACK #-} !Bounds
+  , contentType :: {-# UNPACK #-} !Bounds
+  , pcapId :: {-# UNPACK #-} !Word64
+  , fileDigest :: {-# UNPACK #-} !Bounds
+    -- Only used by wildfire subtype
+    -- TODO: make the file digest a 128-bit or 256-bit word
+  , cloud :: {-# UNPACK #-} !Bounds
+    -- Only used by wildfire subtype
+  , urlIndex :: {-# UNPACK #-} !Word64
+    -- Only used by wildfire subtype
+  , userAgentBounds :: {-# UNPACK #-} !Bounds
+  , userAgentByteArray :: {-# UNPACK #-} !ByteArray
+    -- Only used by url filtering subtype. This field may have
+    -- escaped characters, so we include the possibility of
+    -- using a byte array distinct from the original log.
+  , fileType :: {-# UNPACK #-} !Bounds
+    -- Only used by wildfire subtype
+  , forwardedFor :: {-# UNPACK #-} !Bounds
+    -- Only used by url filtering subtype
+  , referer :: {-# UNPACK #-} !Bounds
+    -- Only used by url filtering subtype
+  , sender :: {-# UNPACK #-} !Bounds
+    -- Only used by wildfire subtype
+  , subject :: {-# UNPACK #-} !Bounds
+    -- Only used by wildfire subtype
+  , recipient :: {-# UNPACK #-} !Bounds
+    -- Only used by wildfire subtype
+  , reportId :: {-# UNPACK #-} !Bounds
+    -- Only used by wildfire subtype
+  , deviceGroupHierarchyLevel1 :: {-# UNPACK #-} !Word64
+  , deviceGroupHierarchyLevel2 :: {-# UNPACK #-} !Word64
+  , deviceGroupHierarchyLevel3 :: {-# UNPACK #-} !Word64
+  , deviceGroupHierarchyLevel4 :: {-# UNPACK #-} !Word64
+  , virtualSystemName :: {-# UNPACK #-} !Bounds
+  , deviceName :: {-# UNPACK #-} !Bounds
+    -- TODO: skipping over uuid fields for now
+  , httpMethod :: {-# UNPACK #-} !Bounds
+  , tunnelId :: {-# UNPACK #-} !Word64
+  , parentSessionId :: {-# UNPACK #-} !Word64
+    -- Only used by url subtype
+  , threatCategory :: {-# UNPACK #-} !Bounds
+  , contentVersion :: {-# UNPACK #-} !Bounds
+    -- TODO: skipping some fields here
+  , sctpAssociationId :: {-# UNPACK #-} !Word64
+  , payloadProtocolId :: {-# UNPACK #-} !Word64
+    -- TODO: skipping over other fields here
   }
 
 -- | The field that was being parsed when a parse failure
@@ -329,6 +431,94 @@ virtualSystemNameField :: Field
 virtualSystemNameField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
   where !x# = "virtualSystemName"#
 
+payloadProtocolField :: Field
+payloadProtocolField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:payloadProtocol"#
+
+senderField :: Field
+senderField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:sender"#
+
+recipientField :: Field
+recipientField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:recipient"#
+
+refererField :: Field
+refererField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:referer"#
+
+pcapIdField :: Field
+pcapIdField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:pcapId"#
+
+directionField :: Field
+directionField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:direction"#
+
+contentTypeField :: Field
+contentTypeField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:contentType"#
+
+severityField :: Field
+severityField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:severity"#
+
+cloudField :: Field
+cloudField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:cloud"#
+
+threatCategoryField :: Field
+threatCategoryField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:threatCategory"#
+
+urlIndexField :: Field
+urlIndexField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:urlIndex"#
+
+fileDigestField :: Field
+fileDigestField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:fileDigest"#
+
+fileTypeField :: Field
+fileTypeField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:fileType"#
+
+forwardedForField :: Field
+forwardedForField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:forwardedFor"#
+
+userAgentField :: Field
+userAgentField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:userAgent"#
+
+subjectField :: Field
+subjectField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:subject"#
+
+contentVersionField :: Field
+contentVersionField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:contentVersion"#
+
+httpMethodField :: Field
+httpMethodField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:httpMethod"#
+
+httpHeadersField :: Field
+httpHeadersField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:httpHeaders"#
+
+reportIdField :: Field
+reportIdField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:reportId"#
+
+miscellaneousField :: Field
+miscellaneousField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:miscellaneous"#
+
+threatIdField :: Field
+threatIdField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:threatId"#
+
 deviceNameField :: Field
 deviceNameField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
   where !x# = "deviceName"#
@@ -422,16 +612,18 @@ untilSpace :: e -> Parser e s Bounds
 untilSpace e = do
   start <- P.cursor
   P.skipUntilAsciiConsume e ' '
-  end <- P.cursor
-  pure (Bounds start ((end - start) - 1))
+  endSucc <- P.cursor
+  let end = endSucc - 1
+  pure (Bounds start (end - start))
 
 untilComma :: e -> Parser e s Bounds
 {-# inline untilComma #-}
 untilComma e = do
   start <- P.cursor
   P.skipUntilAsciiConsume e ','
-  end <- P.cursor
-  pure (Bounds start ((end - start) - 1))
+  endSucc <- P.cursor
+  let end = endSucc - 1
+  pure (Bounds start (end - start))
 
 skipThroughComma :: e -> Parser e s ()
 {-# inline skipThroughComma #-}
@@ -513,22 +705,31 @@ parserLog :: Parser Field s Log
 parserLog = do
   (!hostBounds,!receiveTime,!serialNumber) <- parserPrefix
   P.ascii typeField 'T'
-  P.ascii typeField 'R'
-  P.ascii typeField 'A'
-  P.ascii typeField 'F'
-  P.ascii typeField 'F'
-  P.ascii typeField 'I'
-  P.ascii typeField 'C'
-  P.ascii typeField ','
-  !x <- parserTraffic hostBounds receiveTime serialNumber
-  pure (LogTraffic x)
+  P.anyAscii typeField >>= \case
+    'R' -> do
+      P.ascii typeField 'A'
+      P.ascii typeField 'F'
+      P.ascii typeField 'F'
+      P.ascii typeField 'I'
+      P.ascii typeField 'C'
+      P.ascii typeField ','
+      !x <- parserTraffic hostBounds receiveTime serialNumber
+      pure (LogTraffic x)
+    'H' -> do
+      P.ascii typeField 'R'
+      P.ascii typeField 'E'
+      P.ascii typeField 'A'
+      P.ascii typeField 'T'
+      P.ascii typeField ','
+      !x <- parserThreat hostBounds receiveTime serialNumber
+      pure (LogThreat x)
+    _ -> P.failure typeField
 
 parserTraffic :: Bounds -> Datetime -> Word64 -> Parser Field s Traffic
 parserTraffic syslogHost receiveTime serialNumber = do
   subtype <- untilComma subtypeField
   skipThroughComma futureUseAField
   timeGenerated <- parserDatetime timeGeneratedDateField timeGeneratedTimeField
-  -- TODO: get the four ip addresseses
   sourceAddress <- IP.fromIPv4 <$> parserIPv4 sourceAddressField
   destinationAddress <- IP.fromIPv4 <$> parserIPv4 destinationAddressField
   natSourceIp <- IP.fromIPv4 <$> parserIPv4 natSourceIpField
@@ -577,10 +778,10 @@ parserTraffic syslogHost receiveTime serialNumber = do
   packetsSent <- w64Comma packetsSentField
   packetsReceived <- w64Comma packetsReceivedField
   sessionEndReason <- untilComma sessionEndReasonField
-  deviceGroupHierarchyLevel1 <- untilComma deviceGroupHierarchyLevel1Field
-  deviceGroupHierarchyLevel2 <- untilComma deviceGroupHierarchyLevel2Field
-  deviceGroupHierarchyLevel3 <- untilComma deviceGroupHierarchyLevel3Field
-  deviceGroupHierarchyLevel4 <- untilComma deviceGroupHierarchyLevel4Field
+  deviceGroupHierarchyLevel1 <- w64Comma deviceGroupHierarchyLevel1Field
+  deviceGroupHierarchyLevel2 <- w64Comma deviceGroupHierarchyLevel2Field
+  deviceGroupHierarchyLevel3 <- w64Comma deviceGroupHierarchyLevel3Field
+  deviceGroupHierarchyLevel4 <- w64Comma deviceGroupHierarchyLevel4Field
   virtualSystemName <- untilComma virtualSystemNameField
   deviceName <- untilComma deviceNameField
   actionSource <- untilComma actionSourceField
@@ -613,6 +814,198 @@ parserTraffic syslogHost receiveTime serialNumber = do
     , serialNumber, packetsReceived, actionFlags, flags, message
     , syslogHost
     }
+
+parserThreat :: Bounds -> Datetime -> Word64 -> Parser Field s Threat
+parserThreat syslogHost receiveTime serialNumber = do
+  subtype <- untilComma subtypeField
+  skipThroughComma futureUseAField
+  timeGenerated <- parserDatetime timeGeneratedDateField timeGeneratedTimeField
+  sourceAddress <- IP.fromIPv4 <$> parserIPv4 sourceAddressField
+  destinationAddress <- IP.fromIPv4 <$> parserIPv4 destinationAddressField
+  natSourceIp <- IP.fromIPv4 <$> parserIPv4 natSourceIpField
+  natDestinationIp <- IP.fromIPv4 <$> parserIPv4 natDestinationIpField
+  ruleName <- untilComma ruleNameField
+  sourceUser <- untilComma sourceUserField
+  destinationUser <- untilComma destinationUserField
+  application <- untilComma applicationField
+  virtualSystem <- untilComma virtualSystemField
+  sourceZone <- untilComma sourceZoneField
+  destinationZone <- untilComma destinationZoneField
+  inboundInterface <- untilComma inboundInterfaceField
+  outboundInterface <- untilComma outboundInterfaceField
+  logAction <- untilComma logActionField
+  skipThroughComma futureUseBField
+  sessionId <- w64Comma sessionIdField
+  repeatCount <- w64Comma repeatCountField
+  sourcePort <- w16Comma sourcePortField
+  destinationPort <- w16Comma destinationPortField
+  natSourcePort <- w16Comma natSourcePortField
+  natDestinationPort <- w16Comma natDestinationPortField
+  -- TODO: handle the flags
+  P.ascii actionFlagsField '0'
+  P.ascii actionFlagsField 'x'
+  _ <- untilComma flagsField
+  let flags = 0
+  ipProtocol <- untilComma ipProtocolField
+  action <- untilComma actionField
+  Bytes{array=miscellaneousByteArray,offset=miscOff,length=miscLen} <-
+    parserOptionallyQuoted miscellaneousField
+  let miscellaneousBounds = Bounds miscOff miscLen
+  (threatName,threatId) <- parserThreatId
+  category <- untilComma categoryField
+  severity <- untilComma severityField
+  direction <- untilComma directionField
+  sequenceNumber <- w64Comma sequenceNumberField
+  -- TODO: handle action flags
+  P.ascii actionFlagsField '0'
+  P.ascii actionFlagsField 'x'
+  _ <- untilComma actionFlagsField
+  let actionFlags = 0
+  sourceCountry <- untilComma sourceCountryField
+  destinationCountry <- untilComma destinationCountryField
+  skipThroughComma futureUseEField
+  contentType <- untilComma contentTypeField
+  pcapId <- w64Comma pcapIdField
+  fileDigest <- untilComma fileDigestField
+  cloud <- untilComma cloudField
+  urlIndex <- w64Comma urlIndexField
+  Bytes{array=userAgentByteArray,offset=uaOff,length=uaLen} <-
+    parserOptionallyQuoted userAgentField
+  let userAgentBounds = Bounds uaOff uaLen
+  fileType <- untilComma fileTypeField
+  forwardedFor <- untilComma forwardedForField
+  referer <- untilComma refererField
+  sender <- untilComma senderField
+  subject <- untilComma subjectField
+  recipient <- untilComma recipientField
+  reportId <- untilComma reportIdField
+  deviceGroupHierarchyLevel1 <- w64Comma deviceGroupHierarchyLevel1Field
+  deviceGroupHierarchyLevel2 <- w64Comma deviceGroupHierarchyLevel2Field
+  deviceGroupHierarchyLevel3 <- w64Comma deviceGroupHierarchyLevel3Field
+  deviceGroupHierarchyLevel4 <- w64Comma deviceGroupHierarchyLevel4Field
+  virtualSystemName <- untilComma virtualSystemNameField
+  deviceName <- untilComma deviceNameField
+  skipThroughComma futureUseFField
+  skipThroughComma sourceVmUuidField
+  skipThroughComma destinationVmUuidField
+  httpMethod <- untilComma httpMethodField
+  tunnelId <- w64Comma tunnelIdField
+  skipThroughComma monitorTagField
+  parentSessionId <- w64Comma parentSessionIdField
+  skipThroughComma parentStartTimeField
+  skipThroughComma tunnelTypeField
+  threatCategory <- untilComma threatCategoryField
+  contentVersion <- untilComma contentVersionField
+  skipThroughComma futureUseGField
+  sctpAssociationId <- w64Comma sctpAssociationIdField
+  payloadProtocolId <- w64Comma payloadProtocolField
+  -- TODO: Handle HTTP Headers correctly
+  P.endOfInput httpHeadersField
+  message <- P.expose
+  pure Threat
+    { subtype , timeGenerated , sourceAddress , destinationAddress 
+    , natSourceIp , natDestinationIp , ruleName , sourceUser 
+    , destinationUser , application , virtualSystem , sourceZone 
+    , destinationZone , inboundInterface , outboundInterface , logAction 
+    , sessionId , repeatCount , sourcePort , destinationPort 
+    , natSourcePort , natDestinationPort , ipProtocol 
+    , action , category 
+    , sequenceNumber , sourceCountry , destinationCountry 
+    , deviceGroupHierarchyLevel1 , deviceGroupHierarchyLevel2 
+    , deviceGroupHierarchyLevel3 , deviceGroupHierarchyLevel4 
+    , virtualSystemName , deviceName , receiveTime
+    , serialNumber, actionFlags, flags, message
+    , syslogHost, threatId, severity, direction, threatName
+    , contentType, pcapId
+    , fileDigest, cloud, urlIndex
+    , userAgentBounds, sctpAssociationId
+    , userAgentByteArray, fileType
+    , forwardedFor, referer
+    , sender, subject, recipient
+    , reportId, httpMethod, contentVersion
+    , threatCategory, miscellaneousBounds, miscellaneousByteArray
+    , payloadProtocolId, parentSessionId, tunnelId
+    }
+
+parserThreatId :: Parser Field s (Bounds,Word64)
+parserThreatId = P.anyAscii threatIdField >>= \case
+  '(' -> do
+    theId <- P.decWord threatIdField
+    P.ascii threatIdField ')'
+    P.ascii threatIdField ','
+    pure (Bounds 0 0, fromIntegral theId)
+  _ -> do
+    startSucc <- P.cursor
+    P.skipUntilAsciiConsume threatIdField '('
+    endSucc <- P.cursor
+    theId <- P.decWord threatIdField
+    P.ascii threatIdField ')'
+    P.ascii threatIdField ','
+    let start = startSucc - 1
+        end = endSucc - 1
+    pure (Bounds start (end - start), fromIntegral theId)
+
+-- Precondition: the cursor is placed at the beginning of the
+-- possibly-quoted content. That is, the comma preceeding has
+-- already been consumed.
+parserOptionallyQuoted :: e -> Parser e s Bytes
+parserOptionallyQuoted e = P.anyAscii e >>= \case
+  '"' -> do
+    -- First, we do a run through just to see if anything
+    -- actually needs to be escaped.
+    start <- P.cursor
+    !n <- consumeQuoted e 0
+    !array <- P.expose
+    !endSuccSucc <- P.cursor
+    let end = endSuccSucc - 2
+    if n == 0
+      then pure Bytes{array,offset=start,length=(end - start)}
+      else do
+        let !r = escapeQuotes Bytes{array,offset=start,length=(end - start)}
+        pure $! Bytes{array=r,offset=0,length=PM.sizeofByteArray r}
+  ',' -> do
+    !array <- P.expose
+    pure $! Bytes{array,offset=0,length=0}
+  _ -> do
+    !startSucc <- P.cursor
+    P.skipUntilAsciiConsume e ','
+    !endSucc <- P.cursor
+    !arr <- P.expose
+    let start = startSucc - 1
+    let end = endSucc - 1
+    pure $! (Bytes arr start (end - start))
+
+-- Precondition: the input is a valid CSV-style quoted-escaped
+-- string. That is, any double quote character is guaranteed to
+-- be followed by another one.
+escapeQuotes :: Bytes -> ByteArray
+escapeQuotes (Bytes arr off0 len0) = runByteArrayST $ do
+  marr <- PM.newByteArray len0
+  let go !soff !doff !len = if len > 0
+        then do
+          let w :: Word8 = PM.indexByteArray arr soff
+          PM.writeByteArray marr doff w
+          if w /= c2w '"'
+            then go (soff + 1) (doff + 1) (len - 1)
+            else go (soff + 2) (doff + 1) (len - 2)
+        else pure doff
+  finalSz <- go off0 0 len0
+  marr' <- PM.resizeMutableByteArray marr finalSz
+  PM.unsafeFreezeByteArray marr'
+
+-- When this parser completed, the position in the input will be
+-- just after the comma that followed the quoted field.
+-- This is defined recursively.
+consumeQuoted ::
+     e
+  -> Int -- the number of escaped quotes we have encountered
+  -> Parser e s Int
+consumeQuoted e !n = do
+  P.skipUntilAsciiConsume e '"'
+  P.anyAscii e >>= \case
+    ',' -> pure n
+    '"' -> consumeQuoted e (n + 1)
+    _ -> P.failure e
 
 parserIPv4 :: e -> Parser e s IPv4
 {-# inline parserIPv4 #-}
@@ -664,3 +1057,7 @@ cstringLen# ptr = go 0 where
   go !ix@(I# ix#) = if PM.indexOffPtr (Ptr ptr) ix == (0 :: Word8)
     then ix#
     else go (ix + 1)
+
+c2w :: Char -> Word8
+c2w = fromIntegral . ord
+
