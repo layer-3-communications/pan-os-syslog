@@ -27,17 +27,13 @@ deviceName :: Traffic -> Bytes
 deviceName (Traffic{deviceName=Bounds off len,message=msg}) =
   Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
 
-sourceUser :: Traffic -> Maybe Bytes
+sourceUser :: Traffic -> Bytes
 sourceUser (Traffic{sourceUser=Bounds off len,message=msg}) =
-  if len > 0
-    then Just Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
-    else Nothing
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
 
-destinationUser :: Traffic -> Maybe Bytes
+destinationUser :: Traffic -> Bytes
 destinationUser (Traffic{destinationUser=Bounds off len,message=msg}) =
-  if len > 0
-    then Just Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
-    else Nothing
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
 
 packetsReceived :: Traffic -> Word64
 packetsReceived = U.packetsReceived

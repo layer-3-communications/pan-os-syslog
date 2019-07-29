@@ -122,7 +122,8 @@ data Threat = Threat
   , serialNumber :: {-# UNPACK #-} !Word64
     -- In log, presented as: 002610378847
   , subtype :: {-# UNPACK #-} !Bounds
-    -- Presented as: start, end, drop, and deny
+    -- Presented as: data, file, flood, packet, scan, spyware, url,
+    -- virus, vulnerability, wildfire, or wildfire-virus.
   , timeGenerated :: {-# UNPACK #-} !Datetime
     -- Presented as: 2018/04/11 23:19:22
   , sourceAddress :: {-# UNPACK #-} !IP
