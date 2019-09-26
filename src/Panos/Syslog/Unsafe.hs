@@ -25,10 +25,10 @@ import Data.Primitive (ByteArray)
 import Data.Primitive.Addr (Addr(Addr))
 import Chronos (Year(..),Month(..),Datetime(..),TimeOfDay(..))
 import Chronos (DayOfMonth(..),Date(..))
-import Data.Bytes.Parser (Parser,Parser#)
-import Data.Word (Word64,Word32,Word16,Word,Word8)
-import Net.Types (IPv4(..),IP)
-import GHC.Exts (Ptr(Ptr),Int(I#),Int#,Addr#,Word#,coerce)
+import Data.Bytes.Parser (Parser)
+import Data.Word (Word64,Word32,Word16,Word8)
+import Net.Types (IP)
+import GHC.Exts (Ptr(Ptr),Int(I#),Int#,Addr#)
 import Control.Exception (Exception)
 import Control.Monad.ST.Run (runByteArrayST)
 import qualified Control.Exception
@@ -37,6 +37,9 @@ import qualified Data.Primitive.Ptr as PM
 import qualified Net.IP as IP
 import qualified Net.IPv4 as IPv4
 import qualified Data.Bytes.Parser as P
+import qualified Data.Bytes.Parser.Unsafe as Unsafe
+import qualified Data.Bytes.Parser.Latin as Latin
+import qualified Data.Bytes.Parser.Ascii as Ascii
 import qualified GHC.Pack
 
 data Log
@@ -611,42 +614,42 @@ sctpChunksReceivedField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
 untilSpace :: e -> Parser e s Bounds
 {-# inline untilSpace #-}
 untilSpace e = do
-  start <- P.cursor
-  P.skipUntilAsciiConsume e ' '
-  endSucc <- P.cursor
+  start <- Unsafe.cursor
+  Latin.skipTrailedBy e ' '
+  endSucc <- Unsafe.cursor
   let end = endSucc - 1
   pure (Bounds start (end - start))
 
 untilComma :: e -> Parser e s Bounds
 {-# inline untilComma #-}
 untilComma e = do
-  start <- P.cursor
-  P.skipUntilAsciiConsume e ','
-  endSucc <- P.cursor
+  start <- Unsafe.cursor
+  Latin.skipTrailedBy e ','
+  endSucc <- Unsafe.cursor
   let end = endSucc - 1
   pure (Bounds start (end - start))
 
 skipThroughComma :: e -> Parser e s ()
 {-# inline skipThroughComma #-}
-skipThroughComma e = P.skipUntilAsciiConsume e ','
+skipThroughComma e = Latin.skipTrailedBy e ','
 
 -- This does not require that any digits are
 -- actually present.
 skipDigitsThroughComma :: e -> Parser e s ()
 {-# inline skipDigitsThroughComma #-}
 skipDigitsThroughComma e =
-  P.skipDigitsAscii *> P.ascii e ','
+  Latin.skipDigits *> Latin.char e ','
 
 w64Comma :: e -> Parser e s Word64
 {-# inline w64Comma #-}
 w64Comma e = do
-  w <- P.decWord e
-  P.ascii e ','
-  pure (fromIntegral w)
+  w <- Latin.decWord64 e
+  Latin.char e ','
+  pure w
 
 w16Comma :: e -> Parser e s Word16
 {-# inline w16Comma #-}
-w16Comma e = P.decWord16 e <* P.ascii e ','
+w16Comma e = Latin.decWord16 e <* Latin.char e ','
 
 -- Returns the receive time and the serial number. There is a
 -- little subtlety here. The PANOS guide says that logs should
@@ -665,25 +668,25 @@ w16Comma e = P.decWord16 e <* P.ascii e ','
 parserPrefix :: Parser Field s (Bounds,Datetime,Word64)
 {-# inline parserPrefix #-}
 parserPrefix = do
-  P.ascii syslogPriorityField '<'
-  P.skipUntilAsciiConsume syslogPriorityField '>'
-  P.skipAscii ' '
-  P.skipAlphaAscii1 syslogDatetimeField -- Month
-  P.skipAscii1 syslogDatetimeField ' '
-  P.skipDigitsAscii1 syslogDatetimeField -- Day
-  P.skipAscii1 syslogDatetimeField ' '
-  P.skipDigitsAscii1 syslogDatetimeField -- Hour
-  P.ascii syslogDatetimeField ':'
-  P.skipDigitsAscii1 syslogDatetimeField -- Minute
-  P.ascii syslogDatetimeField ':'
-  P.skipDigitsAscii1 syslogDatetimeField -- Second
-  P.skipAscii1 syslogDatetimeField ' '
+  Latin.char syslogPriorityField '<'
+  Latin.skipTrailedBy syslogPriorityField '>'
+  Latin.skipChar ' '
+  Ascii.skipAlpha1 syslogDatetimeField -- Month
+  Latin.skipChar1 syslogDatetimeField ' '
+  Latin.skipDigits1 syslogDatetimeField -- Day
+  Latin.skipChar1 syslogDatetimeField ' '
+  Latin.skipDigits1 syslogDatetimeField -- Hour
+  Latin.char syslogDatetimeField ':'
+  Latin.skipDigits1 syslogDatetimeField -- Minute
+  Latin.char syslogDatetimeField ':'
+  Latin.skipDigits1 syslogDatetimeField -- Second
+  Latin.skipChar1 syslogDatetimeField ' '
   hostBounds <- untilSpace syslogHostField
-  P.skipAscii ' '
+  Latin.skipChar ' '
   skipThroughComma futureUseDField
   !recv <- parserDatetime receiveTimeDateField receiveTimeTimeField
-  !ser <- fromIntegral <$> P.decWord serialNumberField
-  P.ascii serialNumberField ','
+  !ser <- fromIntegral <$> Latin.decWord serialNumberField
+  Latin.char serialNumberField ','
   pure (hostBounds,recv,ser)
 
 -- | Decode a PAN-OS syslog message. This fails without attempting
@@ -697,7 +700,7 @@ decodeLog b
   -- save space on indices.
   | PM.sizeofByteArray b < 16384 = case P.parseByteArray parserLog b of
       P.Failure e -> Left e
-      P.Success r _ len -> case len of
+      P.Success r len -> case len of
         0 -> Right r
         _ -> Left leftoversField
   | otherwise = Left tooBigField
@@ -705,36 +708,41 @@ decodeLog b
 parserLog :: Parser Field s Log
 parserLog = do
   (!hostBounds,!receiveTime,!serialNumber) <- parserPrefix
-  P.ascii typeField 'T'
-  P.anyAscii typeField >>= \case
+  Latin.char typeField 'T'
+  Latin.any typeField >>= \case
     'R' -> do
-      P.ascii typeField 'A'
-      P.ascii typeField 'F'
-      P.ascii typeField 'F'
-      P.ascii typeField 'I'
-      P.ascii typeField 'C'
-      P.ascii typeField ','
+      Latin.char typeField 'A'
+      Latin.char typeField 'F'
+      Latin.char typeField 'F'
+      Latin.char typeField 'I'
+      Latin.char typeField 'C'
+      Latin.char typeField ','
       !x <- parserTraffic hostBounds receiveTime serialNumber
       pure (LogTraffic x)
     'H' -> do
-      P.ascii typeField 'R'
-      P.ascii typeField 'E'
-      P.ascii typeField 'A'
-      P.ascii typeField 'T'
-      P.ascii typeField ','
+      Latin.char typeField 'R'
+      Latin.char typeField 'E'
+      Latin.char typeField 'A'
+      Latin.char typeField 'T'
+      Latin.char typeField ','
       !x <- parserThreat hostBounds receiveTime serialNumber
       pure (LogThreat x)
-    _ -> P.failure typeField
+    _ -> P.fail typeField
 
 parserTraffic :: Bounds -> Datetime -> Word64 -> Parser Field s Traffic
 parserTraffic syslogHost receiveTime serialNumber = do
   subtype <- untilComma subtypeField
   skipThroughComma futureUseAField
+  -- The datetime parser consumes the trailing comma
   timeGenerated <- parserDatetime timeGeneratedDateField timeGeneratedTimeField
-  sourceAddress <- IP.fromIPv4 <$> parserIPv4 sourceAddressField
-  destinationAddress <- IP.fromIPv4 <$> parserIPv4 destinationAddressField
-  natSourceIp <- IP.fromIPv4 <$> parserIPv4 natSourceIpField
-  natDestinationIp <- IP.fromIPv4 <$> parserIPv4 natDestinationIpField
+  sourceAddress <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes sourceAddressField
+  Latin.char sourceAddressField ','
+  destinationAddress <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes destinationAddressField
+  Latin.char destinationAddressField ','
+  natSourceIp <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes natSourceIpField
+  Latin.char natSourceIpField ','
+  natDestinationIp <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes natDestinationIpField
+  Latin.char natDestinationIpField ','
   ruleName <- untilComma ruleNameField
   sourceUser <- untilComma sourceUserField
   destinationUser <- untilComma destinationUserField
@@ -753,8 +761,8 @@ parserTraffic syslogHost receiveTime serialNumber = do
   natSourcePort <- w16Comma natSourcePortField
   natDestinationPort <- w16Comma natDestinationPortField
   -- TODO: handle the flags
-  P.ascii actionFlagsField '0'
-  P.ascii actionFlagsField 'x'
+  Latin.char actionFlagsField '0'
+  Latin.char actionFlagsField 'x'
   _ <- untilComma flagsField
   let flags = 0
   ipProtocol <- untilComma ipProtocolField
@@ -769,8 +777,8 @@ parserTraffic syslogHost receiveTime serialNumber = do
   skipThroughComma futureUseCField
   sequenceNumber <- w64Comma sequenceNumberField
   -- TODO: handle action flags
-  P.ascii actionFlagsField '0'
-  P.ascii actionFlagsField 'x'
+  Latin.char actionFlagsField '0'
+  Latin.char actionFlagsField 'x'
   _ <- untilComma actionFlagsField
   let actionFlags = 0
   sourceCountry <- untilComma sourceCountryField
@@ -796,8 +804,8 @@ parserTraffic syslogHost receiveTime serialNumber = do
   skipThroughComma sctpAssociationIdField
   skipDigitsThroughComma sctpChunksField
   skipDigitsThroughComma sctpChunksSentField
-  P.skipDigitsAscii1 sctpChunksReceivedField
-  message <- P.expose
+  Latin.skipDigits1 sctpChunksReceivedField
+  message <- Unsafe.expose
   pure Traffic
     { subtype , timeGenerated , sourceAddress , destinationAddress 
     , natSourceIp , natDestinationIp , ruleName , sourceUser 
@@ -820,11 +828,16 @@ parserThreat :: Bounds -> Datetime -> Word64 -> Parser Field s Threat
 parserThreat syslogHost receiveTime serialNumber = do
   subtype <- untilComma subtypeField
   skipThroughComma futureUseAField
+  -- the datetime parser also grabs the trailing comma
   timeGenerated <- parserDatetime timeGeneratedDateField timeGeneratedTimeField
-  sourceAddress <- IP.fromIPv4 <$> parserIPv4 sourceAddressField
-  destinationAddress <- IP.fromIPv4 <$> parserIPv4 destinationAddressField
-  natSourceIp <- IP.fromIPv4 <$> parserIPv4 natSourceIpField
-  natDestinationIp <- IP.fromIPv4 <$> parserIPv4 natDestinationIpField
+  sourceAddress <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes sourceAddressField
+  Latin.char sourceAddressField ','
+  destinationAddress <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes destinationAddressField
+  Latin.char destinationAddressField ','
+  natSourceIp <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes natSourceIpField
+  Latin.char natSourceIpField ','
+  natDestinationIp <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes natDestinationIpField
+  Latin.char natDestinationIpField ','
   ruleName <- untilComma ruleNameField
   sourceUser <- untilComma sourceUserField
   destinationUser <- untilComma destinationUserField
@@ -843,8 +856,8 @@ parserThreat syslogHost receiveTime serialNumber = do
   natSourcePort <- w16Comma natSourcePortField
   natDestinationPort <- w16Comma natDestinationPortField
   -- TODO: handle the flags
-  P.ascii actionFlagsField '0'
-  P.ascii actionFlagsField 'x'
+  Latin.char actionFlagsField '0'
+  Latin.char actionFlagsField 'x'
   _ <- untilComma flagsField
   let flags = 0
   ipProtocol <- untilComma ipProtocolField
@@ -858,8 +871,8 @@ parserThreat syslogHost receiveTime serialNumber = do
   direction <- untilComma directionField
   sequenceNumber <- w64Comma sequenceNumberField
   -- TODO: handle action flags
-  P.ascii actionFlagsField '0'
-  P.ascii actionFlagsField 'x'
+  Latin.char actionFlagsField '0'
+  Latin.char actionFlagsField 'x'
   _ <- untilComma actionFlagsField
   let actionFlags = 0
   sourceCountry <- untilComma sourceCountryField
@@ -902,7 +915,7 @@ parserThreat syslogHost receiveTime serialNumber = do
   payloadProtocolId <- w64Comma payloadProtocolField
   -- TODO: Handle HTTP Headers correctly
   P.endOfInput httpHeadersField
-  message <- P.expose
+  message <- Unsafe.expose
   pure Threat
     { subtype , timeGenerated , sourceAddress , destinationAddress 
     , natSourceIp , natDestinationIp , ruleName , sourceUser 
@@ -929,35 +942,35 @@ parserThreat syslogHost receiveTime serialNumber = do
     }
 
 parserThreatId :: Parser Field s (Bounds,Word64)
-parserThreatId = P.anyAscii threatIdField >>= \case
+parserThreatId = Latin.any threatIdField >>= \case
   '(' -> do
-    theId <- P.decWord threatIdField
-    P.ascii threatIdField ')'
-    P.ascii threatIdField ','
-    pure (Bounds 0 0, fromIntegral theId)
+    theId <- Latin.decWord64 threatIdField
+    Latin.char threatIdField ')'
+    Latin.char threatIdField ','
+    pure (Bounds 0 0, theId)
   _ -> do
-    startSucc <- P.cursor
-    P.skipUntilAsciiConsume threatIdField '('
-    endSucc <- P.cursor
-    theId <- P.decWord threatIdField
-    P.ascii threatIdField ')'
-    P.ascii threatIdField ','
+    startSucc <- Unsafe.cursor
+    Latin.skipTrailedBy threatIdField '('
+    endSucc <- Unsafe.cursor
+    theId <- Latin.decWord64 threatIdField
+    Latin.char threatIdField ')'
+    Latin.char threatIdField ','
     let start = startSucc - 1
         end = endSucc - 1
-    pure (Bounds start (end - start), fromIntegral theId)
+    pure (Bounds start (end - start), theId)
 
 -- Precondition: the cursor is placed at the beginning of the
 -- possibly-quoted content. That is, the comma preceeding has
 -- already been consumed.
 parserOptionallyQuoted :: e -> Parser e s Bytes
-parserOptionallyQuoted e = P.anyAscii e >>= \case
+parserOptionallyQuoted e = Latin.any e >>= \case
   '"' -> do
     -- First, we do a run through just to see if anything
     -- actually needs to be escaped.
-    start <- P.cursor
+    start <- Unsafe.cursor
     !n <- consumeQuoted e 0
-    !array <- P.expose
-    !endSuccSucc <- P.cursor
+    !array <- Unsafe.expose
+    !endSuccSucc <- Unsafe.cursor
     let end = endSuccSucc - 2
     if n == 0
       then pure Bytes{array,offset=start,length=(end - start)}
@@ -965,13 +978,13 @@ parserOptionallyQuoted e = P.anyAscii e >>= \case
         let !r = escapeQuotes Bytes{array,offset=start,length=(end - start)}
         pure $! Bytes{array=r,offset=0,length=PM.sizeofByteArray r}
   ',' -> do
-    !array <- P.expose
+    !array <- Unsafe.expose
     pure $! Bytes{array,offset=0,length=0}
   _ -> do
-    !startSucc <- P.cursor
-    P.skipUntilAsciiConsume e ','
-    !endSucc <- P.cursor
-    !arr <- P.expose
+    !startSucc <- Unsafe.cursor
+    Latin.skipTrailedBy e ','
+    !endSucc <- Unsafe.cursor
+    !arr <- Unsafe.expose
     let start = startSucc - 1
     let end = endSucc - 1
     pure $! (Bytes arr start (end - start))
@@ -1002,44 +1015,27 @@ consumeQuoted ::
   -> Int -- the number of escaped quotes we have encountered
   -> Parser e s Int
 consumeQuoted e !n = do
-  P.skipUntilAsciiConsume e '"'
-  P.anyAscii e >>= \case
+  Latin.skipTrailedBy e '"'
+  Latin.any e >>= \case
     ',' -> pure n
     '"' -> consumeQuoted e (n + 1)
-    _ -> P.failure e
-
-parserIPv4 :: e -> Parser e s IPv4
-{-# inline parserIPv4 #-}
-parserIPv4 e = coerce (P.boxWord32 (parserIPv4# e))
-
-parserIPv4# :: e -> Parser# e s Word#
-{-# noinline parserIPv4# #-}
-parserIPv4# e = P.unboxWord32 $ do
-  !a <- P.decWord8 e
-  P.ascii e '.'
-  !b <- P.decWord8 e
-  P.ascii e '.'
-  !c <- P.decWord8 e
-  P.ascii e '.'
-  !d <- P.decWord8 e
-  P.ascii e ','
-  pure (getIPv4 (IPv4.fromOctets a b c d))
+    _ -> P.fail e
 
 parserDatetime :: e -> e -> Parser e s Datetime
 {-# noinline parserDatetime #-}
 parserDatetime edate etime = do
-  year <- P.decWord edate
-  P.ascii edate '/'
-  month <- P.decWord edate
-  P.ascii edate '/'
-  day <- P.decWord edate
-  P.ascii etime ' '
-  hour <- P.decWord etime
-  P.ascii etime ':'
-  minute <- P.decWord etime
-  P.ascii etime ':'
-  second <- P.decWord etime
-  P.ascii etime ','
+  year <- Latin.decWord edate
+  Latin.char edate '/'
+  month <- Latin.decWord edate
+  Latin.char edate '/'
+  day <- Latin.decWord edate
+  Latin.char etime ' '
+  hour <- Latin.decWord etime
+  Latin.char etime ':'
+  minute <- Latin.decWord etime
+  Latin.char etime ':'
+  second <- Latin.decWord etime
+  Latin.char etime ','
   pure $ Datetime
     (Date
       (Year (fromIntegral year))
@@ -1061,4 +1057,3 @@ cstringLen# ptr = go 0 where
 
 c2w :: Char -> Word8
 c2w = fromIntegral . ord
-
