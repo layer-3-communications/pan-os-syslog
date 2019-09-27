@@ -1,4 +1,4 @@
-import Gauge (bgroup,bench,whnf,defaultMain)
+import Gauge (bench,whnf,defaultMain)
 import Panos.Syslog (decodeLog)
 
 import qualified Sample as S
