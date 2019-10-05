@@ -16,11 +16,20 @@ module Panos.Syslog.Traffic
   , packetsSent
   , sourceUser
   , destinationUser
+  , sourcePort
+  , destinationPort
+  , natSourcePort
+  , natDestinationPort
+  , natSourceIp
+  , natDestinationIp
+  , sourceAddress
+  , destinationAddress
   ) where
 
 import Data.Bytes.Types (Bytes(..))
 import Panos.Syslog.Unsafe (Traffic(Traffic),Bounds(Bounds))
-import Data.Word (Word64)
+import Data.Word (Word64,Word16)
+import Net.Types (IP)
 import qualified Panos.Syslog.Unsafe as U
 
 deviceName :: Traffic -> Bytes
@@ -40,6 +49,30 @@ packetsReceived = U.packetsReceived
 
 packetsSent :: Traffic -> Word64
 packetsSent = U.packetsSent
+
+sourcePort :: Traffic -> Word16
+sourcePort = U.sourcePort
+
+natSourcePort :: Traffic -> Word16
+natSourcePort = U.natSourcePort
+
+destinationPort :: Traffic -> Word16
+destinationPort = U.destinationPort
+
+natDestinationPort :: Traffic -> Word16
+natDestinationPort = U.natDestinationPort
+
+natSourceIp :: Traffic -> IP
+natSourceIp = U.natSourceIp
+
+natDestinationIp :: Traffic -> IP
+natDestinationIp = U.natDestinationIp
+
+sourceAddress :: Traffic -> IP
+sourceAddress = U.sourceAddress
+
+destinationAddress :: Traffic -> IP
+destinationAddress = U.destinationAddress
 
 packets :: Traffic -> Word64
 packets = U.packets

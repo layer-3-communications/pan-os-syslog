@@ -32,7 +32,7 @@ library
   build-depends:
     , base >=4.12.0.0 && <5
     , byteslice >=0.1.1 && <0.2
-    , bytesmith >=0.2.0.1 && <0.3
+    , bytesmith >=0.3 && <0.4
     , chronos >=1.0.6 && <1.1
     , ip >=1.6 && <1.7
     , primitive >=0.7 && <0.8

@@ -1,15 +1,5 @@
 packages: .
 
-source-repository-package
-  type: git
-  location: https://github.com/andrewthad/bytesmith
-  tag: 47b7345a87b5f7b42ebe0a66ea8ca67fa61dbe8e
-
-source-repository-package
-  type: git
-  location: https://github.com/andrewthad/haskell-ip
-  tag: 7217dee48ed99959e5873c59d7b9597ff0e45723
-
 package pan-os-syslog
   ghc-options: -Wall -Werror
 

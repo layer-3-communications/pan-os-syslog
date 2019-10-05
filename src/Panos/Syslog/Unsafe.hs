@@ -700,7 +700,7 @@ decodeLog b
   -- save space on indices.
   | PM.sizeofByteArray b < 16384 = case P.parseByteArray parserLog b of
       P.Failure e -> Left e
-      P.Success r len -> case len of
+      P.Success (P.Slice _ len r) -> case len of
         0 -> Right r
         _ -> Left leftoversField
   | otherwise = Left tooBigField
