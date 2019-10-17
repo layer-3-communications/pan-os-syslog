@@ -19,28 +19,29 @@ module Panos.Syslog.Unsafe
   , decodeLog
   ) where
 
+import Chronos (DayOfMonth(..),Date(..))
+import Chronos (Year(..),Month(..),Datetime(..),TimeOfDay(..))
+import Control.Exception (Exception)
+import Control.Monad.ST.Run (runByteArrayST)
+import Data.Bytes.Parser (Parser)
 import Data.Bytes.Types (Bytes(..),UnmanagedBytes(UnmanagedBytes))
 import Data.Char (ord)
 import Data.Primitive (ByteArray)
 import Data.Primitive.Addr (Addr(Addr))
-import Chronos (Year(..),Month(..),Datetime(..),TimeOfDay(..))
-import Chronos (DayOfMonth(..),Date(..))
-import Data.Bytes.Parser (Parser)
 import Data.Word (Word64,Word32,Word16,Word8)
-import Net.Types (IP)
 import GHC.Exts (Ptr(Ptr),Int(I#),Int#,Addr#)
-import Control.Exception (Exception)
-import Control.Monad.ST.Run (runByteArrayST)
+import Net.Types (IP)
+
 import qualified Control.Exception
+import qualified Data.Bytes.Parser as P
+import qualified Data.Bytes.Parser.Ascii as Ascii
+import qualified Data.Bytes.Parser.Latin as Latin
+import qualified Data.Bytes.Parser.Unsafe as Unsafe
 import qualified Data.Primitive as PM
 import qualified Data.Primitive.Ptr as PM
+import qualified GHC.Pack
 import qualified Net.IP as IP
 import qualified Net.IPv4 as IPv4
-import qualified Data.Bytes.Parser as P
-import qualified Data.Bytes.Parser.Unsafe as Unsafe
-import qualified Data.Bytes.Parser.Latin as Latin
-import qualified Data.Bytes.Parser.Ascii as Ascii
-import qualified GHC.Pack
 
 data Log
   = LogTraffic !Traffic

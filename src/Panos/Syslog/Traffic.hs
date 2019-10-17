@@ -10,20 +10,32 @@ module Panos.Syslog.Traffic
   ( bytes
   , bytesReceived
   , bytesSent
+  , destinationAddress
+  , destinationPort
+  , destinationUser
+  , deviceGroupHierarchyLevel1
+  , deviceGroupHierarchyLevel2
+  , deviceGroupHierarchyLevel3
+  , deviceGroupHierarchyLevel4
   , deviceName
+  , inboundInterface
+  , logAction
+  , natDestinationIp
+  , natDestinationPort
+  , natSourceIp
+  , natSourcePort
+  , outboundInterface
   , packets
   , packetsReceived
   , packetsSent
-  , sourceUser
-  , destinationUser
-  , sourcePort
-  , destinationPort
-  , natSourcePort
-  , natDestinationPort
-  , natSourceIp
-  , natDestinationIp
+  , ruleName
+  , sequenceNumber
+  , serialNumber
   , sourceAddress
-  , destinationAddress
+  , sourcePort
+  , sourceUser
+  , subtype
+  , syslogHost
   ) where
 
 import Data.Bytes.Types (Bytes(..))
@@ -32,17 +44,41 @@ import Data.Word (Word64,Word16)
 import Net.Types (IP)
 import qualified Panos.Syslog.Unsafe as U
 
+syslogHost :: Traffic -> Bytes
+syslogHost (Traffic{syslogHost=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+subtype :: Traffic -> Bytes
+subtype (Traffic{subtype=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+ruleName :: Traffic -> Bytes
+ruleName (Traffic{ruleName=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+inboundInterface :: Traffic -> Bytes
+inboundInterface (Traffic{inboundInterface=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+outboundInterface :: Traffic -> Bytes
+outboundInterface (Traffic{outboundInterface=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+logAction :: Traffic -> Bytes
+logAction (Traffic{logAction=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
 deviceName :: Traffic -> Bytes
 deviceName (Traffic{deviceName=Bounds off len,message=msg}) =
-  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+  Bytes{offset=off,length=len,array=msg}
 
 sourceUser :: Traffic -> Bytes
 sourceUser (Traffic{sourceUser=Bounds off len,message=msg}) =
-  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+  Bytes{offset=off,length=len,array=msg}
 
 destinationUser :: Traffic -> Bytes
 destinationUser (Traffic{destinationUser=Bounds off len,message=msg}) =
-  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+  Bytes{offset=off,length=len,array=msg}
 
 packetsReceived :: Traffic -> Word64
 packetsReceived = U.packetsReceived
@@ -52,6 +88,9 @@ packetsSent = U.packetsSent
 
 sourcePort :: Traffic -> Word16
 sourcePort = U.sourcePort
+
+sequenceNumber :: Traffic -> Word64
+sequenceNumber = U.sequenceNumber
 
 natSourcePort :: Traffic -> Word16
 natSourcePort = U.natSourcePort
@@ -85,4 +124,19 @@ bytesSent = U.bytesSent
 
 bytes :: Traffic -> Word64
 bytes = U.bytes
+
+serialNumber :: Traffic -> Word64
+serialNumber = U.serialNumber
+
+deviceGroupHierarchyLevel1 :: Traffic -> Word64
+deviceGroupHierarchyLevel1 = U.deviceGroupHierarchyLevel1
+
+deviceGroupHierarchyLevel2 :: Traffic -> Word64
+deviceGroupHierarchyLevel2 = U.deviceGroupHierarchyLevel2
+
+deviceGroupHierarchyLevel3 :: Traffic -> Word64
+deviceGroupHierarchyLevel3 = U.deviceGroupHierarchyLevel3
+
+deviceGroupHierarchyLevel4 :: Traffic -> Word64
+deviceGroupHierarchyLevel4 = U.deviceGroupHierarchyLevel4
 
