@@ -8,6 +8,7 @@
 
 module Panos.Syslog.Traffic
   ( action
+  , application
   , bytes
   , bytesReceived
   , bytesSent
@@ -19,6 +20,7 @@ module Panos.Syslog.Traffic
   , deviceGroupHierarchyLevel3
   , deviceGroupHierarchyLevel4
   , deviceName
+  , elapsedTime
   , inboundInterface
   , ipProtocol
   , logAction
@@ -78,9 +80,16 @@ action :: Traffic -> Bytes
 action (Traffic{action=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
 
+application :: Traffic -> Bytes
+application (Traffic{application=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
 deviceName :: Traffic -> Bytes
 deviceName (Traffic{deviceName=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
+
+elapsedTime :: Traffic -> Word64
+elapsedTime = U.elapsedTime
 
 sourceUser :: Traffic -> Bytes
 sourceUser (Traffic{sourceUser=Bounds off len,message=msg}) =
