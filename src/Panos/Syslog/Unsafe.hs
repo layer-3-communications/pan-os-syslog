@@ -564,10 +564,6 @@ leftoversField :: Field
 leftoversField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
   where !x# = "framing:leftovers"#
 
-tooBigField :: Field
-tooBigField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
-  where !x# = "framing:oversized"#
-
 sourceVmUuidField :: Field
 sourceVmUuidField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
   where !x# = "field:source_uuid"#
@@ -690,21 +686,13 @@ parserPrefix = do
   Latin.char serialNumberField ','
   pure (hostBounds,recv,ser)
 
--- | Decode a PAN-OS syslog message. This fails without attempting
--- to parse the message if the 'ByteArray' is has 16384 or more
--- bytes.
-decodeLog :: ByteArray -> Either Field Log
-decodeLog b
-  -- These logs have to fit in a UDP packet, so it is effectively
-  -- impossible to receive one that is over 1500 bytes. The hard
-  -- cap on size is included to provide a future opportunity to
-  -- save space on indices.
-  | PM.sizeofByteArray b < 16384 = case P.parseByteArray parserLog b of
-      P.Failure e -> Left e
-      P.Success (P.Slice _ len r) -> case len of
-        0 -> Right r
-        _ -> Left leftoversField
-  | otherwise = Left tooBigField
+-- | Decode a PAN-OS syslog message.
+decodeLog :: Bytes -> Either Field Log
+decodeLog b = case P.parseBytes parserLog b of
+  P.Failure e -> Left e
+  P.Success (P.Slice _ len r) -> case len of
+    0 -> Right r
+    _ -> Left leftoversField
 
 parserLog :: Parser Field s Log
 parserLog = do

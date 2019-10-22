@@ -7,9 +7,10 @@ module Sample
   , threat_8_1_C
   ) where
 
-import Data.Primitive (ByteArray)
+import Data.Bytes (Bytes)
 import Data.Word (Word8)
 import Data.Char (ord)
+import qualified Data.Bytes as Bytes
 import qualified GHC.Exts as Exts
 
 -- Sample Logs. If you add a sample log to this file, please
@@ -24,11 +25,11 @@ import qualified GHC.Exts as Exts
 --   or NY-APP or SAMPLE-HOST.
 -- * Replace rule names.
 
-pack :: String -> ByteArray
-pack = Exts.fromList . map (fromIntegral @Int @Word8 . ord)
+pack :: String -> Bytes
+pack = Bytes.fromByteArray . Exts.fromList . map (fromIntegral @Int @Word8 . ord)
 
 -- Traffic Log 
-traffic_8_1_A :: ByteArray
+traffic_8_1_A :: Bytes
 traffic_8_1_A = pack $ concat
   [ "<12> Jul 14 11:22:29 MY-HOST.example.com 1,2019/07/14 10:26:22,"
   , "003924147953,TRAFFIC,end,2057,2019/07/14 10:20:24,192.0.2.235,"
@@ -42,7 +43,7 @@ traffic_8_1_A = pack $ concat
   ]
 
 -- Threat log for web browsing
-threat_8_1_A :: ByteArray
+threat_8_1_A :: Bytes
 threat_8_1_A = pack $ concat
   [ "<13> Jul 23 15:45:11 NY-APP-8.local 1,2019/07/23 15:45:11,"
   , "028191718331,THREAT,url,2056,2019/07/23 15:45:12,192.0.2.240,"
@@ -57,7 +58,7 @@ threat_8_1_A = pack $ concat
   ]
 
 -- Threat log for web browsing
-threat_8_1_B :: ByteArray
+threat_8_1_B :: Bytes
 threat_8_1_B = pack $ concat
   [ "<13> Jul 24 08:38:34 THE-FW-3.local 1,2019/07/24 08:38:34,"
   , "293471355489,THREAT,url,3179,2019/07/24 08:38:35,192.0.2.99,"
@@ -76,7 +77,7 @@ threat_8_1_B = pack $ concat
   ]
 
 -- Threat log for endpoint mapper detection
-threat_8_1_C :: ByteArray
+threat_8_1_C :: Bytes
 threat_8_1_C = pack $ concat
   [ "<14> Jul 24 12:12:23 THE-FW-4.local 1,2019/07/24 12:12:22,"
   , "012001011326,THREAT,vulnerability,2049,2019/07/24 12:12:35,"

@@ -65,6 +65,7 @@ benchmark bench
     , common
   build-depends:
     , base
+    , byteslice
     , gauge
     , primitive
     , pan-os-syslog
