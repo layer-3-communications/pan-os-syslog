@@ -7,7 +7,8 @@
 {-# language GeneralizedNewtypeDeriving #-}
 
 module Panos.Syslog.Traffic
-  ( bytes
+  ( action
+  , bytes
   , bytesReceived
   , bytesSent
   , destinationAddress
@@ -19,6 +20,7 @@ module Panos.Syslog.Traffic
   , deviceGroupHierarchyLevel4
   , deviceName
   , inboundInterface
+  , ipProtocol
   , logAction
   , natDestinationIp
   , natDestinationPort
@@ -44,6 +46,10 @@ import Data.Word (Word64,Word16)
 import Net.Types (IP)
 import qualified Panos.Syslog.Unsafe as U
 
+ipProtocol :: Traffic -> Bytes
+ipProtocol (Traffic{ipProtocol=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
 syslogHost :: Traffic -> Bytes
 syslogHost (Traffic{syslogHost=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
@@ -66,6 +72,10 @@ outboundInterface (Traffic{outboundInterface=Bounds off len,message=msg}) =
 
 logAction :: Traffic -> Bytes
 logAction (Traffic{logAction=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+action :: Traffic -> Bytes
+action (Traffic{action=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
 
 deviceName :: Traffic -> Bytes
