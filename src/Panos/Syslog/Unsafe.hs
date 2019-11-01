@@ -13,6 +13,7 @@ module Panos.Syslog.Unsafe
     Log(..)
   , Traffic(..)
   , Threat(..)
+  , System(..)
   , Field(..)
   , Bounds(..)
     -- * Decoding
@@ -46,11 +47,42 @@ import qualified Net.IPv4 as IPv4
 data Log
   = LogTraffic !Traffic
   | LogThreat !Threat
+  | LogSystem !System
   | LogOther
 
 data Bounds = Bounds
   {-# UNPACK #-} !Int -- offset
   {-# UNPACK #-} !Int -- length
+
+data System = System
+  { message :: {-# UNPACK #-} !ByteArray
+    -- The original log
+  , syslogHost :: {-# UNPACK #-} !Bounds
+    -- The host as presented in the syslog preamble that
+    -- prefixes the message.
+  , receiveTime :: {-# UNPACK #-} !Datetime
+    -- In log, presented as: 2019/06/18 15:10:20
+  , serialNumber :: {-# UNPACK #-} !Word64
+    -- In log, presented as: 002610378847
+  , subtype :: {-# UNPACK #-} !Bounds
+    -- Presented as: dhcp, dnsproxy, dos, general, etc.
+  , timeGenerated :: {-# UNPACK #-} !Datetime
+  , virtualSystem :: {-# UNPACK #-} !Bounds
+  , eventId :: {-# UNPACK #-} !Bounds
+  , object :: {-# UNPACK #-} !Bounds
+  , module_ :: {-# UNPACK #-} !Bounds
+  , severity :: {-# UNPACK #-} !Bounds
+  , descriptionBounds :: {-# UNPACK #-} !Bounds
+  , descriptionByteArray :: {-# UNPACK #-} !ByteArray
+  , sequenceNumber :: {-# UNPACK #-} !Word64
+  , actionFlags :: {-# UNPACK #-} !Word64
+  , deviceGroupHierarchyLevel1 :: {-# UNPACK #-} !Word64
+  , deviceGroupHierarchyLevel2 :: {-# UNPACK #-} !Word64
+  , deviceGroupHierarchyLevel3 :: {-# UNPACK #-} !Word64
+  , deviceGroupHierarchyLevel4 :: {-# UNPACK #-} !Word64
+  , virtualSystemName :: {-# UNPACK #-} !Bounds
+  , deviceName :: {-# UNPACK #-} !Bounds
+  }
 
 data Traffic = Traffic
   { message :: {-# UNPACK #-} !ByteArray
@@ -608,6 +640,23 @@ sctpChunksReceivedField :: Field
 sctpChunksReceivedField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
   where !x# = "field:chunks_received"#
 
+moduleField :: Field
+moduleField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:module"#
+
+descriptionField :: Field
+descriptionField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:description"#
+
+eventIdField :: Field
+eventIdField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:eventId"#
+
+objectField :: Field
+objectField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:object"#
+
+
 untilSpace :: e -> Parser e s Bounds
 {-# inline untilSpace #-}
 untilSpace e = do
@@ -629,6 +678,17 @@ untilComma e = do
 skipThroughComma :: e -> Parser e s ()
 {-# inline skipThroughComma #-}
 skipThroughComma e = Latin.skipTrailedBy e ','
+
+-- There should not be any more commas left in the input.
+-- This takes until it finds a comma or until end of input
+-- is reached.
+finalField :: Parser e s Bounds
+{-# inline finalField #-}
+finalField = do
+  start <- Unsafe.cursor
+  Latin.skipUntil ','
+  end <- Unsafe.cursor
+  pure (Bounds start (end - start))
 
 -- This does not require that any digits are
 -- actually present.
@@ -697,25 +757,21 @@ decodeLog b = case P.parseBytes parserLog b of
 parserLog :: Parser Field s Log
 parserLog = do
   (!hostBounds,!receiveTime,!serialNumber) <- parserPrefix
-  Latin.char typeField 'T'
   Latin.any typeField >>= \case
-    'R' -> do
-      Latin.char typeField 'A'
-      Latin.char typeField 'F'
-      Latin.char typeField 'F'
-      Latin.char typeField 'I'
-      Latin.char typeField 'C'
-      Latin.char typeField ','
-      !x <- parserTraffic hostBounds receiveTime serialNumber
-      pure (LogTraffic x)
-    'H' -> do
-      Latin.char typeField 'R'
-      Latin.char typeField 'E'
-      Latin.char typeField 'A'
-      Latin.char typeField 'T'
-      Latin.char typeField ','
-      !x <- parserThreat hostBounds receiveTime serialNumber
-      pure (LogThreat x)
+    'S' -> do
+      Latin.char6 typeField 'Y' 'S' 'T' 'E' 'M' ','
+      !x <- parserSystem hostBounds receiveTime serialNumber
+      pure (LogSystem x)
+    'T' -> Latin.any typeField >>= \case
+      'R' -> do
+        Latin.char6 typeField 'A' 'F' 'F' 'I' 'C' ','
+        !x <- parserTraffic hostBounds receiveTime serialNumber
+        pure (LogTraffic x)
+      'H' -> do
+        Latin.char5 typeField 'R' 'E' 'A' 'T' ','
+        !x <- parserThreat hostBounds receiveTime serialNumber
+        pure (LogThreat x)
+      _ -> P.fail typeField
     _ -> P.fail typeField
 
 parserTraffic :: Bounds -> Datetime -> Word64 -> Parser Field s Traffic
@@ -811,6 +867,46 @@ parserTraffic syslogHost receiveTime serialNumber = do
     , virtualSystemName , deviceName , actionSource , receiveTime
     , serialNumber, packetsReceived, actionFlags, flags, message
     , syslogHost
+    }
+
+parserSystem :: Bounds -> Datetime -> Word64 -> Parser Field s System
+parserSystem syslogHost receiveTime serialNumber = do
+  subtype <- untilComma subtypeField
+  skipThroughComma futureUseAField
+  -- The datetime parser consumes the trailing comma
+  timeGenerated <- parserDatetime timeGeneratedDateField timeGeneratedTimeField
+  virtualSystem <- untilComma virtualSystemField
+  eventId <- untilComma eventIdField
+  object <- untilComma objectField
+  skipThroughComma futureUseBField
+  skipThroughComma futureUseCField
+  module_ <- untilComma moduleField
+  severity <- untilComma severityField
+  Bytes{array=descriptionByteArray,offset=descrOff,length=descrLen} <-
+    parserOptionallyQuoted descriptionField
+  let descriptionBounds = Bounds descrOff descrLen
+  sequenceNumber <- w64Comma sequenceNumberField
+  -- TODO: handle action flags
+  Latin.char actionFlagsField '0'
+  Latin.char actionFlagsField 'x'
+  _ <- untilComma actionFlagsField
+  let actionFlags = 0
+  deviceGroupHierarchyLevel1 <- w64Comma deviceGroupHierarchyLevel1Field
+  deviceGroupHierarchyLevel2 <- w64Comma deviceGroupHierarchyLevel2Field
+  deviceGroupHierarchyLevel3 <- w64Comma deviceGroupHierarchyLevel3Field
+  deviceGroupHierarchyLevel4 <- w64Comma deviceGroupHierarchyLevel4Field
+  virtualSystemName <- untilComma virtualSystemNameField
+  deviceName <- finalField
+  message <- Unsafe.expose
+  pure System
+    { subtype , timeGenerated
+    , sequenceNumber 
+    , deviceGroupHierarchyLevel1 , deviceGroupHierarchyLevel2 
+    , deviceGroupHierarchyLevel3 , deviceGroupHierarchyLevel4 
+    , virtualSystemName , deviceName , receiveTime
+    , serialNumber, actionFlags, message
+    , syslogHost, virtualSystem, eventId, object, module_
+    , severity, descriptionBounds, descriptionByteArray
     }
 
 parserThreat :: Bounds -> Datetime -> Word64 -> Parser Field s Threat

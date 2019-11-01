@@ -1,5 +1,10 @@
 packages: .
 
+source-repository-package
+  type: git
+  location: https://github.com/andrewthad/bytesmith
+  tag: 065fa9fbf798d31d625a47ed85808e47c0bf3910
+
 package pan-os-syslog
   ghc-options: -Wall -Werror
 

@@ -6,6 +6,7 @@ module Sample
   , threat_8_1_A
   , threat_8_1_B
   , threat_8_1_C
+  , system_8_1_A
   ) where
 
 import Data.Bytes (Bytes)
@@ -103,4 +104,14 @@ threat_8_1_C = pack $ concat
   , "10.0.0.0-10.255.255.255,10.0.0.0-10.255.255.255,0,,0,,,0,,,,,,,,"
   , "0,225,0,0,0,,THE-FW-4-HOST,,,,,0,,0,,N/A,info-leak,AppThreat-8174-5569,"
   , "0x0,0,6279943187,"
+  ]
+
+-- System log (IKE delete)
+system_8_1_A :: Bytes
+system_8_1_A = pack $ concat
+  [ "<14>Nov  9 19:53:08 NY-DC-FW-2.example.com 1,2019/10/06 15:46:26,"
+  , "009732949126,SYSTEM,vpn,0,2019/10/19 15:39:29,,ike-send-p2-delete,"
+  , "To-FOO-BAR-NET,0,0,general,informational,\"IKE protocol IPSec SA "
+  , "delete message sent to peer. SPI:0xA1CD910F.\",18249042,"
+  , "0x8000000000000000,0,0,0,0,,NY-DC-FW-2"
   ]

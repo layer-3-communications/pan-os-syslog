@@ -13,6 +13,7 @@ import Data.Bytes.Types (Bytes(Bytes))
 
 import qualified Panos.Syslog.Traffic as Traffic
 import qualified Panos.Syslog.Threat as Threat
+import qualified Panos.Syslog.System as System
 import qualified Data.Primitive as PM
 import qualified GHC.Exts as Exts
 import qualified Sample as S
@@ -30,6 +31,8 @@ main = do
   testC
   putStrLn "8.1-Threat-C"
   testD
+  putStrLn "8.1-System-A"
+  testSystemA
   putStrLn "Finished"
 
 testA :: IO ()
@@ -107,6 +110,25 @@ testD = case decodeLog S.threat_8_1_C of
            prettyBytes (Threat.threatName t) ++ "\n"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type" 
+
+testSystemA :: IO ()
+testSystemA = case decodeLog S.system_8_1_A of
+  Left err -> throwIO err
+  Right (LogSystem t) ->
+    if | System.deviceName t /= bytes "NY-DC-FW-2" -> fail $
+           "wrong device name:\nexpected: NY-DC-FW-2\nactually: " ++
+           show (System.deviceName t)
+       | System.description t /= bytes
+           ( concat
+             [ "IKE protocol IPSec SA delete message "
+             , "sent to peer. SPI:0xA1CD910F."
+             ]
+           ) -> fail $
+             "wrong description:\nexpected something about IKE\nactually: " ++
+             show (System.description t)
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type" 
+
 
 bytes :: String -> Bytes
 bytes s = let b = pack s in Bytes b 0 (PM.sizeofByteArray b)
