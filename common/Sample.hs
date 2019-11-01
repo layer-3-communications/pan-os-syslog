@@ -2,6 +2,7 @@
 
 module Sample
   ( traffic_8_1_A
+  , traffic_8_1_B
   , threat_8_1_A
   , threat_8_1_B
   , threat_8_1_C
@@ -40,6 +41,19 @@ traffic_8_1_A = pack $ concat
   , "0,5384825641,0x8000000000000000,10.0.0.0-10.255.255.255,"
   , "10.0.0.0-10.255.255.255,0,1,0,policy-deny,174,0,0,0,MY-VSYS-NAME,"
   , "MY-DEVICE-NAME,from-policy,,,0,,0,,N/A,0,0,0,0"
+  ]
+
+traffic_8_1_B :: Bytes
+traffic_8_1_B = pack $ concat
+  [ "<13> Nov 1 11:26:30 TX-PAN-FW-1.example.org 1,2019/10/01 11:29:30,001922410172,"
+  , "TRAFFIC,end,2067,2019/11/01 11:26:30,192.0.2.165,192.0.2.100,"
+  , "192.0.2.130,192.0.2.100,Some-Rule,example\\jdoe,,google-base,"
+  , "vsys13,ORG-TX-Private,ORG-TX-Public,ethernet9/4.57,ethernet7/3,"
+  , "Forward-Logs,2019/10/01 11:33:34,267134,1,59173,443,5532,443,0x400053,"
+  , "tcp,allow,19421,2151,17270,39,2019/10/01 11:29:17,0,search-engines,0,"
+  , "2176523185,0x8000000000000000,10.0.0.0-10.255.255.255,United States,0,"
+  , "18,21,tcp-fin,134,0,0,0,Some-Name,TX-PAN-FW-1,my-policy,,,0,,0,,N/A,"
+  , "0,0,0,0"
   ]
 
 -- Threat log for web browsing

@@ -22,6 +22,8 @@ main = do
   putStrLn "Start"
   putStrLn "8.1-Traffic-A"
   testA
+  putStrLn "8.1-Traffic-B"
+  testTrafficB
   putStrLn "8.1-Threat-A"
   testB
   putStrLn "8.1-Threat-B"
@@ -61,6 +63,19 @@ testB = case decodeLog S.threat_8_1_A of
        | Threat.miscellaneous t /= bytes "www.example.com/string/\"hello\"" -> fail $
            "wrong miscellaneous (URL):\nExpected: www.example.com\nActually: " ++
            prettyBytes (Threat.miscellaneous t)
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type" 
+
+testTrafficB :: IO ()
+testTrafficB = case decodeLog S.traffic_8_1_B of
+  Left err -> throwIO err
+  Right (LogTraffic t) ->
+    if | Traffic.sourceUser t /= bytes "example\\jdoe" ->
+           fail $
+             "wrong source user:\nexpected: " ++
+             show (bytes "MY-DEVICE-NAME") ++
+             "\nactually: " ++
+             show (Traffic.deviceName t)
        | otherwise -> pure ()
   Right _ -> fail "wrong log type" 
 
