@@ -7,22 +7,32 @@
 {-# language GeneralizedNewtypeDeriving #-}
 
 module Panos.Syslog.Threat
-  ( deviceName
-  , sourceUser
-  , threatCategory
-  , miscellaneous
-  , virtualSystemName
+  ( application
   , contentVersion
+  , destinationAddress
+  , destinationPort
+  , deviceName
+  , httpMethod
+  , miscellaneous
+  , referer
+  , sequenceNumber
+  , severity
+  , sourceAddress
+  , sourcePort
+  , sourceUser
   , subtype
+  , threatCategory
   , threatId
   , threatName
   , timeGenerated
+  , virtualSystemName
   ) where
 
 import Data.Bytes.Types (Bytes(..))
 import Panos.Syslog.Unsafe (Threat(Threat),Bounds(Bounds))
-import Data.Word (Word64)
+import Data.Word (Word64,Word16)
 import Chronos (Datetime)
+import Net.Types (IP)
 import qualified Panos.Syslog.Unsafe as U
 
 subtype :: Threat -> Bytes
@@ -63,3 +73,33 @@ miscellaneous :: Threat -> Bytes
 miscellaneous (Threat{miscellaneousBounds=Bounds off len,miscellaneousByteArray=m}) =
   Bytes{offset=fromIntegral off,length=fromIntegral len,array=m}
 
+sequenceNumber :: Threat -> Word64
+sequenceNumber = U.sequenceNumber
+
+severity :: Threat -> Bytes
+severity (Threat{severity=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+referer :: Threat -> Bytes
+referer (Threat{referer=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+httpMethod :: Threat -> Bytes
+httpMethod (Threat{httpMethod=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+application :: Threat -> Bytes
+application (Threat{application=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+destinationAddress :: Threat -> IP
+destinationAddress = U.destinationAddress
+
+sourceAddress :: Threat -> IP
+sourceAddress = U.sourceAddress
+
+sourcePort :: Threat -> Word16
+sourcePort = U.sourcePort
+
+destinationPort :: Threat -> Word16
+destinationPort = U.destinationPort

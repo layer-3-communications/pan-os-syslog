@@ -2,6 +2,7 @@ module Panos.Syslog
   ( -- * Types
     U.Log(..)
   , U.Traffic
+  , U.Threat
   , U.System
   , U.Field
     -- * Decoding
