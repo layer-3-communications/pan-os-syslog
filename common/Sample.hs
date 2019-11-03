@@ -8,6 +8,7 @@ module Sample
   , threat_8_1_C
   , threat_8_1_D
   , threat_8_1_E
+  , threat_8_1_F
   , system_8_1_A
   ) where
 
@@ -136,6 +137,21 @@ threat_8_1_E = pack $ concat
   , "96402817,0xa000000000000000,10.0.0.0-10.255.255.255,"
   , "10.0.0.0-10.255.255.255,0,,0,,,0,,,,,,,,0,11,0,0,0,,bigbox,"
   , ",,,,0,,0,,N/A,unknown,AppThreat-8217-3140,0x0,0,4794968105,"
+  ]
+
+-- Threat log for tmp file
+threat_8_1_F :: Bytes
+threat_8_1_F = pack $ concat
+  [ "<13>Nov  3 07:37:10 fw-3.example.com 1,2019/11/03 07:37:09,001561170391,"
+  , "THREAT,file,2049,2019/11/03 07:37:09,192.0.2.55,192.0.2.58,192.0.2.57,"
+  , "192.0.2.56,Some-Rule,,,web-browsing,vsys51,ZONE-A,ZONE-B,ae5.67,ae8,"
+  , "Syslog,2019/11/03 07:37:09,48536,2,49619,80,24617,80,0x406000,tcp,"
+  , "alert,\"temp.tmp\",Temporary TMP File(52228),computer-and-internet-info,"
+  , "low,server-to-client,78561201,0xa000000000000000,10.0.0.0-10.255.255.255,"
+  , "United States,0,,0,,,1,,,,,,,,0,11,0,0,0,,fw-3,"
+  , "download.garmin.com/garmindlm/temp.tmp,,,,0,,0,,N/A,unknown,"
+  , "AppThreat-9311-6102,0x0,0,2694915680,"
+  , "download.garmin.com/garmindlm/temp.tmp"
   ]
 
 -- System log (IKE delete)

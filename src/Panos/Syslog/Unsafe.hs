@@ -243,6 +243,7 @@ data Threat = Threat
   , sctpAssociationId :: {-# UNPACK #-} !Word64
   , payloadProtocolId :: {-# UNPACK #-} !Word64
     -- TODO: skipping over other fields here
+  , httpHeaders :: {-# UNPACK #-} !Bounds
   }
 
 -- | The field that was being parsed when a parse failure
@@ -540,10 +541,6 @@ contentVersionField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
 httpMethodField :: Field
 httpMethodField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
   where !x# = "field:httpMethod"#
-
-httpHeadersField :: Field
-httpHeadersField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
-  where !x# = "field:httpHeaders"#
 
 reportIdField :: Field
 reportIdField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
@@ -1000,7 +997,7 @@ parserThreat syslogHost receiveTime serialNumber = do
   sctpAssociationId <- w64Comma sctpAssociationIdField
   payloadProtocolId <- w64Comma payloadProtocolField
   -- TODO: Handle HTTP Headers correctly
-  P.endOfInput httpHeadersField
+  httpHeaders <- finalField
   message <- Unsafe.expose
   pure Threat
     { subtype , timeGenerated , sourceAddress , destinationAddress 
@@ -1025,6 +1022,7 @@ parserThreat syslogHost receiveTime serialNumber = do
     , reportId, httpMethod, contentVersion
     , threatCategory, miscellaneousBounds, miscellaneousByteArray
     , payloadProtocolId, parentSessionId, tunnelId
+    , httpHeaders
     }
 
 -- Threat IDs are weird. There are three different kinds of
