@@ -33,6 +33,8 @@ main = do
   testD
   putStrLn "8.1-Threat-D"
   testThreatD
+  putStrLn "8.1-Threat-E"
+  testThreatE
   putStrLn "8.1-System-A"
   testSystemA
   putStrLn "Finished"
@@ -122,6 +124,16 @@ testThreatD = case decodeLog S.threat_8_1_D of
            prettyBytes (Threat.threatName t) ++ "\n"
        | Threat.sender t /= bytes "From: \"John Doe\" <jdoe@example.com>" ->
            fail $ "wrong sender"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type" 
+
+testThreatE :: IO ()
+testThreatE = case decodeLog S.threat_8_1_E of
+  Left err -> throwIO err
+  Right (LogThreat t) ->
+    if | Threat.threatName t /= bytes "Windows Executable" -> fail $
+           "wrong threat name:\nExpected: Windows Executable\nActually: " ++
+           prettyBytes (Threat.threatName t) ++ "\n"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type" 
 

@@ -7,6 +7,7 @@ module Sample
   , threat_8_1_B
   , threat_8_1_C
   , threat_8_1_D
+  , threat_8_1_E
   , system_8_1_A
   ) where
 
@@ -120,6 +121,21 @@ threat_8_1_D = pack $ concat
   , ",\"From: \"\"John Doe\"\" <jdoe@example.com>\",\"Sub: Hello, Worlds\","
   , "To: <foo@bar.org>;  ,0,11,0,0,0,,BIG-OL-PAN,,,,,0,,0,,N/A,unknown,"
   , "AppThreat-8194-5693,0x0,0,5382217271,"
+  ]
+
+
+-- Threat log for windows executable
+threat_8_1_E :: Bytes
+threat_8_1_E = pack $ concat
+  [ "<13>Nov  3 07:28:05 bigbox.example.com 1,2019/11/03 07:28:04,"
+  , "003942130261,THREAT,file,2049,2019/11/03 07:28:04,192.0.2.11,"
+  , "192.0.2.12,0.0.0.0,0.0.0.0,Alpha-Rule,,,ms-ds-smbv2,vsys13,"
+  , "Alpha-Zone,Beta-Zone,ae4.133,ae3,Syslog,2019/11/03 07:28:04,"
+  , "187912,2,53181,445,0,0,0x6000,tcp,alert,\"SylinkDrop.exe\","
+  , "Windows Executable (EXE)(52020),any,low,server-to-client,"
+  , "96402817,0xa000000000000000,10.0.0.0-10.255.255.255,"
+  , "10.0.0.0-10.255.255.255,0,,0,,,0,,,,,,,,0,11,0,0,0,,bigbox,"
+  , ",,,,0,,0,,N/A,unknown,AppThreat-8217-3140,0x0,0,4794968105,"
   ]
 
 -- System log (IKE delete)

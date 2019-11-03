@@ -40,6 +40,7 @@ import qualified Data.Bytes.Parser.Latin as Latin
 import qualified Data.Bytes.Parser.Unsafe as Unsafe
 import qualified Data.Primitive as PM
 import qualified Data.Primitive.Ptr as PM
+import qualified GHC.Exts as Exts
 import qualified GHC.Pack
 import qualified Net.IP as IP
 import qualified Net.IPv4 as IPv4
@@ -1026,6 +1027,17 @@ parserThreat syslogHost receiveTime serialNumber = do
     , payloadProtocolId, parentSessionId, tunnelId
     }
 
+-- Threat IDs are weird. There are three different kinds of
+-- strings that can show up here:
+--
+-- * (9999)
+-- * Microsoft RPC Endpoint Mapper Detection(30845)
+-- * Windows Executable (EXE)(52020)
+--
+-- URL logs have a threat id of 9999, and there is no description.
+-- Everything else has a human-readable description. Sometimes,
+-- this description is suffixed by a space and a parenthesized
+-- acronym (EXE, DLL, etc.).
 parserThreatId :: Parser Field s (Bounds,Word64)
 parserThreatId = Latin.any threatIdField >>= \case
   '(' -> do
@@ -1036,12 +1048,24 @@ parserThreatId = Latin.any threatIdField >>= \case
   _ -> do
     startSucc <- Unsafe.cursor
     Latin.skipTrailedBy threatIdField '('
-    endSucc <- Unsafe.cursor
+    end <- Latin.trySatisfy (\c -> c >= 'A' && c <= 'Z') >>= \case
+      True -> do
+        endSuccSucc <- Unsafe.cursor
+        Latin.skipTrailedBy threatIdField '('
+        arr <- Unsafe.expose
+        -- We go back an extra character to remove the trailing
+        -- space. I do not believe this can lead to negative-length
+        -- slices, but the line of reasoning is muddy.
+        case indexCharArray arr (endSuccSucc - 3) of
+          ' ' -> pure (endSuccSucc - 3)
+          _ -> P.fail threatIdField
+      False -> do
+        endSucc <- Unsafe.cursor
+        pure (endSucc - 1)
     theId <- Latin.decWord64 threatIdField
     Latin.char threatIdField ')'
     Latin.char threatIdField ','
     let start = startSucc - 1
-        end = endSucc - 1
     pure (Bounds start (end - start), theId)
 
 -- Precondition: the cursor is placed at the beginning of the
@@ -1142,3 +1166,7 @@ cstringLen# ptr = go 0 where
 
 c2w :: Char -> Word8
 c2w = fromIntegral . ord
+
+indexCharArray :: ByteArray -> Int -> Char
+indexCharArray (PM.ByteArray x) (I# i) =
+  Exts.C# (Exts.indexCharArray# x i)
