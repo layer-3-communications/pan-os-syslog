@@ -217,11 +217,11 @@ data Threat = Threat
     -- Only used by url filtering subtype
   , referer :: {-# UNPACK #-} !Bounds
     -- Only used by url filtering subtype
-  , sender :: {-# UNPACK #-} !Bounds
+  , sender :: {-# UNPACK #-} !Bytes
     -- Only used by wildfire subtype
-  , subject :: {-# UNPACK #-} !Bounds
+  , subject :: {-# UNPACK #-} !Bytes
     -- Only used by wildfire subtype
-  , recipient :: {-# UNPACK #-} !Bounds
+  , recipient :: {-# UNPACK #-} !Bytes
     -- Only used by wildfire subtype
   , reportId :: {-# UNPACK #-} !Bounds
     -- Only used by wildfire subtype
@@ -974,9 +974,9 @@ parserThreat syslogHost receiveTime serialNumber = do
   fileType <- untilComma fileTypeField
   forwardedFor <- untilComma forwardedForField
   referer <- untilComma refererField
-  sender <- untilComma senderField
-  subject <- untilComma subjectField
-  recipient <- untilComma recipientField
+  sender <- parserOptionallyQuoted senderField
+  subject <- parserOptionallyQuoted subjectField
+  recipient <- parserOptionallyQuoted recipientField
   reportId <- untilComma reportIdField
   deviceGroupHierarchyLevel1 <- w64Comma deviceGroupHierarchyLevel1Field
   deviceGroupHierarchyLevel2 <- w64Comma deviceGroupHierarchyLevel2Field

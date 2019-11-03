@@ -14,12 +14,15 @@ module Panos.Syslog.Threat
   , deviceName
   , httpMethod
   , miscellaneous
+  , recipient
   , referer
+  , sender
   , sequenceNumber
   , severity
   , sourceAddress
   , sourcePort
   , sourceUser
+  , subject
   , subtype
   , threatCategory
   , threatId
@@ -103,3 +106,12 @@ sourcePort = U.sourcePort
 
 destinationPort :: Threat -> Word16
 destinationPort = U.destinationPort
+
+sender :: Threat -> Bytes
+sender = U.sender
+
+subject :: Threat -> Bytes
+subject = U.subject
+
+recipient :: Threat -> Bytes
+recipient = U.recipient

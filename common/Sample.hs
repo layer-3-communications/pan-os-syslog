@@ -6,6 +6,7 @@ module Sample
   , threat_8_1_A
   , threat_8_1_B
   , threat_8_1_C
+  , threat_8_1_D
   , system_8_1_A
   ) where
 
@@ -104,6 +105,21 @@ threat_8_1_C = pack $ concat
   , "10.0.0.0-10.255.255.255,10.0.0.0-10.255.255.255,0,,0,,,0,,,,,,,,"
   , "0,225,0,0,0,,THE-FW-4-HOST,,,,,0,,0,,N/A,info-leak,AppThreat-8174-5569,"
   , "0x0,0,6279943187,"
+  ]
+
+-- Threat log for email
+threat_8_1_D :: Bytes
+threat_8_1_D = pack $ concat
+  [ "<13>Nov  3 07:01:51 BIG-OL-PAN.example.com 1,2019/11/03 07:01:51,"
+  , "008724449461,THREAT,file,2049,2019/11/03 07:01:51,192.0.2.105,"
+  , "192.0.2.106,192.0.2.107,192.0.2.108,My-Email-Rule,,,smtp,vsys17,"
+  , "MY-ZN,YOUR-ZN,ae2,ae13.5,Syslog,2019/11/03 07:01:51,206756,1,31532,"
+  , "25,42813,25,0x406000,tcp,alert,\"\",Email Link(52143),any,low,"
+  , "client-to-server,87562570,0xa000000000000000,United States,"
+  , "United States,0,,0,,,1,,,,"
+  , ",\"From: \"\"John Doe\"\" <jdoe@example.com>\",\"Sub: Hello, Worlds\","
+  , "To: <foo@bar.org>;  ,0,11,0,0,0,,BIG-OL-PAN,,,,,0,,0,,N/A,unknown,"
+  , "AppThreat-8194-5693,0x0,0,5382217271,"
   ]
 
 -- System log (IKE delete)

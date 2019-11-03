@@ -31,6 +31,8 @@ main = do
   testC
   putStrLn "8.1-Threat-C"
   testD
+  putStrLn "8.1-Threat-D"
+  testThreatD
   putStrLn "8.1-System-A"
   testSystemA
   putStrLn "Finished"
@@ -108,6 +110,18 @@ testD = case decodeLog S.threat_8_1_C of
        | Threat.threatName t /= bytes "Microsoft RPC Endpoint Mapper Detection" -> fail $
            "wrong threat name:\nExpected: Microsoft RPC Endpoint Mapper Detection\nActually: " ++
            prettyBytes (Threat.threatName t) ++ "\n"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type" 
+
+testThreatD :: IO ()
+testThreatD = case decodeLog S.threat_8_1_D of
+  Left err -> throwIO err
+  Right (LogThreat t) ->
+    if | Threat.threatName t /= bytes "Email Link" -> fail $
+           "wrong threat name:\nExpected: Email Link\nActually: " ++
+           prettyBytes (Threat.threatName t) ++ "\n"
+       | Threat.sender t /= bytes "From: \"John Doe\" <jdoe@example.com>" ->
+           fail $ "wrong sender"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type" 
 
