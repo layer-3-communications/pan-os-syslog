@@ -11,6 +11,7 @@ module Panos.Syslog.Threat
   , contentVersion
   , destinationAddress
   , destinationPort
+  , destinationUser
   , deviceName
   , httpMethod
   , miscellaneous
@@ -44,6 +45,10 @@ subtype (Threat{subtype=Bounds off len,message=msg}) =
 
 sourceUser :: Threat -> Bytes
 sourceUser (Threat{sourceUser=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+destinationUser :: Threat -> Bytes
+destinationUser (Threat{destinationUser=Bounds off len,message=msg}) =
   Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
 
 deviceName :: Threat -> Bytes
