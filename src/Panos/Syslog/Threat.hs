@@ -13,6 +13,7 @@ module Panos.Syslog.Threat
   , destinationPort
   , destinationUser
   , deviceName
+  , httpHeaders
   , httpMethod
   , miscellaneous
   , recipient
@@ -76,6 +77,9 @@ virtualSystemName (Threat{virtualSystemName=Bounds off len,message=msg}) =
 threatCategory :: Threat -> Bytes
 threatCategory (Threat{threatCategory=Bounds off len,message=msg}) =
   Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+httpHeaders :: Threat -> Bytes
+httpHeaders = U.httpHeaders
 
 miscellaneous :: Threat -> Bytes
 miscellaneous (Threat{miscellaneousBounds=Bounds off len,miscellaneousByteArray=m}) =

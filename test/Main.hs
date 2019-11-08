@@ -37,6 +37,8 @@ main = do
   testThreatE
   putStrLn "8.1-Threat-F"
   testThreatF
+  putStrLn "8.1-Threat-G"
+  testThreatG
   putStrLn "8.1-System-A"
   testSystemA
   putStrLn "Finished"
@@ -60,7 +62,7 @@ testA = case decodeLog S.traffic_8_1_A of
              "wrong bytes received: expected 34 but got " ++
              show (Traffic.bytesReceived t)
        | otherwise -> pure ()
-  Right _ -> fail "wrong log type" 
+  Right _ -> fail "wrong log type"
 
 testB :: IO ()
 testB = case decodeLog S.threat_8_1_A of
@@ -73,7 +75,7 @@ testB = case decodeLog S.threat_8_1_A of
            "wrong miscellaneous (URL):\nExpected: www.example.com\nActually: " ++
            prettyBytes (Threat.miscellaneous t)
        | otherwise -> pure ()
-  Right _ -> fail "wrong log type" 
+  Right _ -> fail "wrong log type"
 
 testTrafficB :: IO ()
 testTrafficB = case decodeLog S.traffic_8_1_B of
@@ -86,7 +88,7 @@ testTrafficB = case decodeLog S.traffic_8_1_B of
              "\nactually: " ++
              show (Traffic.deviceName t)
        | otherwise -> pure ()
-  Right _ -> fail "wrong log type" 
+  Right _ -> fail "wrong log type"
 
 testC :: IO ()
 testC = case decodeLog S.threat_8_1_B of
@@ -102,7 +104,7 @@ testC = case decodeLog S.threat_8_1_B of
            "wrong content version:\nExpected: AppThreat-3-7\nActually: " ++
            prettyBytes (Threat.contentVersion t) ++ "\n"
        | otherwise -> pure ()
-  Right _ -> fail "wrong log type" 
+  Right _ -> fail "wrong log type"
 
 testD :: IO ()
 testD = case decodeLog S.threat_8_1_C of
@@ -115,7 +117,7 @@ testD = case decodeLog S.threat_8_1_C of
            "wrong threat name:\nExpected: Microsoft RPC Endpoint Mapper Detection\nActually: " ++
            prettyBytes (Threat.threatName t) ++ "\n"
        | otherwise -> pure ()
-  Right _ -> fail "wrong log type" 
+  Right _ -> fail "wrong log type"
 
 testThreatD :: IO ()
 testThreatD = case decodeLog S.threat_8_1_D of
@@ -127,7 +129,7 @@ testThreatD = case decodeLog S.threat_8_1_D of
        | Threat.sender t /= bytes "From: \"John Doe\" <jdoe@example.com>" ->
            fail $ "wrong sender"
        | otherwise -> pure ()
-  Right _ -> fail "wrong log type" 
+  Right _ -> fail "wrong log type"
 
 testThreatE :: IO ()
 testThreatE = case decodeLog S.threat_8_1_E of
@@ -137,7 +139,7 @@ testThreatE = case decodeLog S.threat_8_1_E of
            "wrong threat name:\nExpected: Windows Executable\nActually: " ++
            prettyBytes (Threat.threatName t) ++ "\n"
        | otherwise -> pure ()
-  Right _ -> fail "wrong log type" 
+  Right _ -> fail "wrong log type"
 
 testThreatF :: IO ()
 testThreatF = case decodeLog S.threat_8_1_F of
@@ -146,7 +148,18 @@ testThreatF = case decodeLog S.threat_8_1_F of
     if | Threat.threatName t /= bytes "Temporary TMP File" ->
            fail "wrong threat name"
        | otherwise -> pure ()
-  Right _ -> fail "wrong log type" 
+  Right _ -> fail "wrong log type"
+
+testThreatG :: IO ()
+testThreatG = case decodeLog S.threat_8_1_G of
+  Left err -> throwIO err
+  Right (LogThreat t) ->
+    if | Threat.threatName t /= bytes "Hypertext Preprocessor PHP File" ->
+           fail "wrong threat name"
+       | Threat.httpHeaders t /= bytes "contextual.media.net/" ->
+           fail "wrong http headers"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
 
 testSystemA :: IO ()
 testSystemA = case decodeLog S.system_8_1_A of
@@ -164,7 +177,7 @@ testSystemA = case decodeLog S.system_8_1_A of
              "wrong description:\nexpected something about IKE\nactually: " ++
              show (System.description t)
        | otherwise -> pure ()
-  Right _ -> fail "wrong log type" 
+  Right _ -> fail "wrong log type"
 
 
 bytes :: String -> Bytes

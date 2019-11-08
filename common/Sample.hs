@@ -9,6 +9,7 @@ module Sample
   , threat_8_1_D
   , threat_8_1_E
   , threat_8_1_F
+  , threat_8_1_G
   , system_8_1_A
   ) where
 
@@ -152,6 +153,23 @@ threat_8_1_F = pack $ concat
   , "download.garmin.com/garmindlm/temp.tmp,,,,0,,0,,N/A,unknown,"
   , "AppThreat-9311-6102,0x0,0,2694915680,"
   , "download.garmin.com/garmindlm/temp.tmp"
+  ]
+
+-- Threat log for PHP file
+threat_8_1_G :: Bytes
+threat_8_1_G = pack $ concat
+  [ "<13>Nov  7 13:44:45 fw-4.example.com 1,2019/11/07 13:44:44,012301030273,"
+  , "THREAT,file,2049,2019/11/07 13:44:44,192.0.2.3,192.0.2.4,192.0.2.5,"
+  , "192.0.2.6,My-Rule,example\\jdoe,,web-browsing,vsys34,A-Zone,B-Zone,"
+  , "ethernet1/1.201,ethernet1/6,Forward-Logs,2019/11/07 13:44:44,257969,"
+  , "6,57863,80,29036,80,0x402000,tcp,alert,\"checksync.php\","
+  , "Hypertext Preprocessor PHP File(52256),web-advertisements,low,"
+  , "server-to-client,241048149,0xa000000000000000,10.0.0.0-10.255.255.255,"
+  , "United States,0,,0,,,2,,,,,,,,0,134,0,0,0,Staging,fw-4,\"contextual."
+  , "media.net/checksync.php?&vsSync=1&cs=1&hb=1&cv=37&ndec=1&cid=8HBJW752U"
+  , "&prvid=41,108,141,181,192,3007,3008&refUrl=http://www.msn.com&"
+  , "rtime=4\",,,,0,,0,,N/A,unknown,AppThreat-8307-9861,0x0,0,"
+  , "4294967295,\"contextual.media.net/\""
   ]
 
 -- System log (IKE delete)

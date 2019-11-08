@@ -243,7 +243,7 @@ data Threat = Threat
   , sctpAssociationId :: {-# UNPACK #-} !Word64
   , payloadProtocolId :: {-# UNPACK #-} !Word64
     -- TODO: skipping over other fields here
-  , httpHeaders :: {-# UNPACK #-} !Bounds
+  , httpHeaders :: {-# UNPACK #-} !Bytes
   }
 
 -- | The field that was being parsed when a parse failure
@@ -541,6 +541,10 @@ contentVersionField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
 httpMethodField :: Field
 httpMethodField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
   where !x# = "field:httpMethod"#
+
+httpHeadersField :: Field
+httpHeadersField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:httpHeaders"#
 
 reportIdField :: Field
 reportIdField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
@@ -982,7 +986,7 @@ parserThreat syslogHost receiveTime serialNumber = do
   deviceGroupHierarchyLevel4 <- w64Comma deviceGroupHierarchyLevel4Field
   virtualSystemName <- untilComma virtualSystemNameField
   deviceName <- untilComma deviceNameField
-  skipThroughComma futureUseFField
+  parserOptionallyQuoted_ futureUseFField
   skipThroughComma sourceVmUuidField
   skipThroughComma destinationVmUuidField
   httpMethod <- untilComma httpMethodField
@@ -997,7 +1001,7 @@ parserThreat syslogHost receiveTime serialNumber = do
   sctpAssociationId <- w64Comma sctpAssociationIdField
   payloadProtocolId <- w64Comma payloadProtocolField
   -- TODO: Handle HTTP Headers correctly
-  httpHeaders <- finalField
+  httpHeaders <- finalOptionallyQuoted httpHeadersField
   message <- Unsafe.expose
   pure Threat
     { subtype , timeGenerated , sourceAddress , destinationAddress 
@@ -1066,6 +1070,45 @@ parserThreatId = Latin.any threatIdField >>= \case
     let start = startSucc - 1
     pure (Bounds start (end - start), theId)
 
+parserOptionallyQuoted_ :: e -> Parser e s ()
+parserOptionallyQuoted_ e = Latin.any e >>= \case
+  '"' -> do
+    _ <- consumeQuoted e 0
+    pure ()
+  ',' -> pure ()
+  _ -> Latin.skipTrailedBy e ','
+
+-- Precondition: the cursor is placed at the beginning of the
+-- possibly-quoted content. That is, the comma preceeding has
+-- already been consumed. This is very similar to parserOptionallyQuoted,
+-- but it differs slightly because there is no trailing comma. 
+finalOptionallyQuoted :: e -> Parser e s Bytes
+finalOptionallyQuoted e = Latin.opt >>= \case
+  Nothing -> do
+    !array <- Unsafe.expose
+    pure $! Bytes{array,offset=0,length=0}
+  Just c -> case c of
+    '"' -> do
+      -- First, we do a run through just to see if anything
+      -- actually needs to be escaped.
+      start <- Unsafe.cursor
+      !n <- consumeFinalQuoted e 0
+      !array <- Unsafe.expose
+      !endSucc <- Unsafe.cursor
+      let end = endSucc - 1
+      if n == 0
+        then pure Bytes{array,offset=start,length=(end - start)}
+        else do
+          let !r = escapeQuotes Bytes{array,offset=start,length=(end - start)}
+          pure $! Bytes{array=r,offset=0,length=PM.sizeofByteArray r}
+    _ -> do
+      !startSucc <- Unsafe.cursor
+      Latin.skipUntil ','
+      !end <- Unsafe.cursor
+      !arr <- Unsafe.expose
+      let start = startSucc - 1
+      pure $! Bytes arr start (end - start)
+
 -- Precondition: the cursor is placed at the beginning of the
 -- possibly-quoted content. That is, the comma preceeding has
 -- already been consumed.
@@ -1127,6 +1170,20 @@ consumeQuoted e !n = do
     ',' -> pure n
     '"' -> consumeQuoted e (n + 1)
     _ -> P.fail e
+
+-- Like consumeQuoted except that we are expected end-of-input
+-- instead of a comma at the end.
+consumeFinalQuoted ::
+     e
+  -> Int -- the number of escaped quotes we have encountered
+  -> Parser e s Int
+consumeFinalQuoted e !n = do
+  Latin.skipTrailedBy e '"'
+  Latin.opt >>= \case
+    Nothing -> pure n
+    Just c -> case c of
+      '"' -> consumeFinalQuoted e (n + 1)
+      _ -> P.fail e
 
 parserDatetime :: e -> e -> Parser e s Datetime
 {-# noinline parserDatetime #-}
