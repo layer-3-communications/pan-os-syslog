@@ -39,6 +39,8 @@ main = do
   testThreatF
   putStrLn "8.1-Threat-G"
   testThreatG
+  putStrLn "8.1-Threat-H"
+  testThreatH
   putStrLn "8.1-System-A"
   testSystemA
   putStrLn "Finished"
@@ -158,6 +160,15 @@ testThreatG = case decodeLog S.threat_8_1_G of
            fail "wrong threat name"
        | Threat.httpHeaders t /= bytes "contextual.media.net/" ->
            fail "wrong http headers"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testThreatH :: IO ()
+testThreatH = case decodeLog S.threat_8_1_H of
+  Left err -> throwIO err
+  Right (LogThreat t) ->
+    if | Threat.threatId t /= 9999 ->
+           fail "wrong threat id"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"
 

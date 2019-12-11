@@ -93,8 +93,7 @@ severity (Threat{severity=Bounds off len,message=msg}) =
   Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
 
 referer :: Threat -> Bytes
-referer (Threat{referer=Bounds off len,message=msg}) =
-  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+referer = U.referer
 
 httpMethod :: Threat -> Bytes
 httpMethod (Threat{httpMethod=Bounds off len,message=msg}) =

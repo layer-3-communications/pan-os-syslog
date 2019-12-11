@@ -216,7 +216,7 @@ data Threat = Threat
     -- Only used by wildfire subtype
   , forwardedFor :: {-# UNPACK #-} !Bounds
     -- Only used by url filtering subtype
-  , referer :: {-# UNPACK #-} !Bounds
+  , referer :: {-# UNPACK #-} !Bytes
     -- Only used by url filtering subtype
   , sender :: {-# UNPACK #-} !Bytes
     -- Only used by wildfire subtype
@@ -975,7 +975,7 @@ parserThreat syslogHost receiveTime serialNumber = do
   let userAgentBounds = Bounds uaOff uaLen
   fileType <- untilComma fileTypeField
   forwardedFor <- untilComma forwardedForField
-  referer <- untilComma refererField
+  referer <- parserOptionallyQuoted refererField
   sender <- parserOptionallyQuoted senderField
   subject <- parserOptionallyQuoted subjectField
   recipient <- parserOptionallyQuoted recipientField

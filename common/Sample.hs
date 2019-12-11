@@ -10,6 +10,7 @@ module Sample
   , threat_8_1_E
   , threat_8_1_F
   , threat_8_1_G
+  , threat_8_1_H
   , system_8_1_A
   ) where
 
@@ -170,6 +171,30 @@ threat_8_1_G = pack $ concat
   , "&prvid=41,108,141,181,192,3007,3008&refUrl=http://www.msn.com&"
   , "rtime=4\",,,,0,,0,,N/A,unknown,AppThreat-8307-9861,0x0,0,"
   , "4294967295,\"contextual.media.net/\""
+  ]
+
+-- URL threat log. Regression test.
+threat_8_1_H :: Bytes
+threat_8_1_H = pack $ concat
+  [ "<14>Dec 10 19:11:09 fw-4.example.com 1,2019/12/10 19:11:08,002926674589,"
+  , "THREAT,url,2049,2019/12/10 19:11:08,192.0.2.123,192.0.2.125,192.0.2.126,"
+  , "192.0.2.127,Some-Rule,example\\mbjordan,,web-browsing,vsys1,"
+  , "X-Zone,Y-Zone,ethernet2/4.234,ethernet6/7,Forward-Logs,"
+  , "2019/12/10 19:11:08,241982,1,59055,80,2039,80,0x403000,tcp,"
+  , "alert,\"i.nflcdn.com/static/site/7.5/img/fonts/endzone-sans/"
+  , "medium-cond.woff\",(9999),content-delivery-networks,informational,"
+  , "client-to-server,257316637,0xa000000000000000,10.0.0.0-10.255.255.255,"
+  , "United States,0,,0,,,1,\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+  , "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/"
+  , "537.36\",,,\"http://combine.nflcdn.com/yui/min2/index.php?7.5"
+  , "hotfix-7.5.146&b=yui3%2Fstatic%2F7.5%2Fscripts%2Fmodules&f=font-"
+  , "endzonesans-condmedium/font-endzonesans-condmedium.css,font-"
+  , "endzoneslab-medium/font-endzoneslab-medium.css,font-endzoneslab-"
+  , "bold/font-endzoneslab-bold.css,font-endzonetech-medium/font-"
+  , "endzonetech-medium.css,font-endzonetech-bold/font-endzonetech-"
+  , "bold.css,font-endzonesans-bold/font-endzonesans-bold.css\",,,,"
+  , "0,134,0,0,0,Production,GA-PA-FW-1,,,,get,0,,0,,N/A,unknown,"
+  , "AppThreat-0-0,0x0,0,4380241866,"
   ]
 
 -- System log (IKE delete)
