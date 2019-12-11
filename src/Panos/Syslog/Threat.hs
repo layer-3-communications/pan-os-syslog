@@ -20,6 +20,7 @@ module Panos.Syslog.Threat
   , referer
   , sender
   , sequenceNumber
+  , serialNumber
   , severity
   , sourceAddress
   , sourcePort
@@ -87,6 +88,9 @@ miscellaneous (Threat{miscellaneousBounds=Bounds off len,miscellaneousByteArray=
 
 sequenceNumber :: Threat -> Word64
 sequenceNumber = U.sequenceNumber
+
+serialNumber :: Threat -> Word64
+serialNumber = U.serialNumber
 
 severity :: Threat -> Bytes
 severity (Threat{severity=Bounds off len,message=msg}) =
