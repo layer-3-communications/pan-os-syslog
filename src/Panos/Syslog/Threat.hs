@@ -7,15 +7,20 @@
 {-# language GeneralizedNewtypeDeriving #-}
 
 module Panos.Syslog.Threat
-  ( application
+  ( action
+  , application
+  , category
   , contentVersion
   , destinationAddress
   , destinationPort
   , destinationUser
+  , destinationZone
   , deviceName
   , httpHeaders
   , httpMethod
+  , inboundInterface
   , miscellaneous
+  , outboundInterface
   , recipient
   , referer
   , sender
@@ -25,6 +30,7 @@ module Panos.Syslog.Threat
   , sourceAddress
   , sourcePort
   , sourceUser
+  , sourceZone
   , subject
   , subtype
   , threatCategory
@@ -53,6 +59,22 @@ destinationUser :: Threat -> Bytes
 destinationUser (Threat{destinationUser=Bounds off len,message=msg}) =
   Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
 
+inboundInterface :: Threat -> Bytes
+inboundInterface (Threat{inboundInterface=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+outboundInterface :: Threat -> Bytes
+outboundInterface (Threat{outboundInterface=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+sourceZone :: Threat -> Bytes
+sourceZone (Threat{sourceZone=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+destinationZone :: Threat -> Bytes
+destinationZone (Threat{destinationZone=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
 deviceName :: Threat -> Bytes
 deviceName (Threat{deviceName=Bounds off len,message=msg}) =
   Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
@@ -66,6 +88,10 @@ threatId = U.threatId
 
 timeGenerated :: Threat -> Datetime
 timeGenerated = U.timeGenerated
+
+category :: Threat -> Bytes
+category (Threat{category=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
 
 contentVersion :: Threat -> Bytes
 contentVersion (Threat{contentVersion=Bounds off len,message=msg}) =
@@ -101,6 +127,10 @@ referer = U.referer
 
 httpMethod :: Threat -> Bytes
 httpMethod (Threat{httpMethod=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+action :: Threat -> Bytes
+action (Threat{action=Bounds off len,message=msg}) =
   Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
 
 application :: Threat -> Bytes
