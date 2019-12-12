@@ -33,6 +33,7 @@ module Panos.Syslog.Traffic
   , ruleName
   , sequenceNumber
   , serialNumber
+  , sessionEndReason
   , sourceAddress
   , sourcePort
   , sourceUser
@@ -214,6 +215,11 @@ deviceGroupHierarchyLevel3 = U.deviceGroupHierarchyLevel3
 
 deviceGroupHierarchyLevel4 :: Traffic -> Word64
 deviceGroupHierarchyLevel4 = U.deviceGroupHierarchyLevel4
+
+-- | The reason a session terminated.
+sessionEndReason :: Traffic -> Bytes
+sessionEndReason (Traffic{sessionEndReason=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
 
 -- | Virtual System associated with the session.
 virtualSystem :: Traffic -> Bytes

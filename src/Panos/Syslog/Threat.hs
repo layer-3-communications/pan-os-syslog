@@ -20,6 +20,10 @@ module Panos.Syslog.Threat
   , httpMethod
   , inboundInterface
   , miscellaneous
+  , natDestinationIp
+  , natDestinationPort
+  , natSourceIp
+  , natSourcePort
   , outboundInterface
   , recipient
   , referer
@@ -162,3 +166,20 @@ subject = U.subject
 
 recipient :: Threat -> Bytes
 recipient = U.recipient
+
+-- | Post-NAT destination port.
+natDestinationPort :: Threat -> Word16
+natDestinationPort = U.natDestinationPort
+
+-- | If Source NAT performed, the post-NAT Source IP address.
+natSourceIp :: Threat -> IP
+natSourceIp = U.natSourceIp
+
+-- | If Destination NAT performed, the post-NAT Destination IP address.
+natDestinationIp :: Threat -> IP
+natDestinationIp = U.natDestinationIp
+
+-- | Post-NAT source port.
+natSourcePort :: Threat -> Word16
+natSourcePort = U.natSourcePort
+
