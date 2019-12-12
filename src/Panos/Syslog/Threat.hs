@@ -23,6 +23,7 @@ module Panos.Syslog.Threat
   , outboundInterface
   , recipient
   , referer
+  , ruleName
   , sender
   , sequenceNumber
   , serialNumber
@@ -135,6 +136,10 @@ action (Threat{action=Bounds off len,message=msg}) =
 
 application :: Threat -> Bytes
 application (Threat{application=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+ruleName :: Threat -> Bytes
+ruleName (Threat{ruleName=Bounds off len,message=msg}) =
   Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
 
 destinationAddress :: Threat -> IP
