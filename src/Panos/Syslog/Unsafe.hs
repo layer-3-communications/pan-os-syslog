@@ -727,9 +727,14 @@ w16Comma e = Latin.decWord16 e <* Latin.char e ','
 parserPrefix :: Parser Field s (Bounds,Datetime,Word64)
 {-# inline parserPrefix #-}
 parserPrefix = do
-  Latin.char syslogPriorityField '<'
-  Latin.skipTrailedBy syslogPriorityField '>'
   Latin.skipChar ' '
+  -- We allow the syslog priority (the number in angle brackets)
+  -- to be absent.
+  Latin.trySatisfy (== '<') >>= \case
+    True -> do
+      Latin.skipTrailedBy syslogPriorityField '>'
+      Latin.skipChar ' '
+    False -> pure ()
   Ascii.skipAlpha1 syslogDatetimeField -- Month
   Latin.skipChar1 syslogDatetimeField ' '
   Latin.skipDigits1 syslogDatetimeField -- Day

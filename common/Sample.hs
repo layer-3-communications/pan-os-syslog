@@ -96,7 +96,8 @@ threat_8_1_B = pack $ concat
   , "AppThreat-3-7,0x0,0,5323721019,"
   ]
 
--- Threat log for endpoint mapper detection
+-- Threat log for endpoint mapper detection, omitting syslog priority
+-- from the header.
 threat_8_1_C :: Bytes
 threat_8_1_C = pack $ concat
   [ "<14> Jul 24 12:12:23 THE-FW-4.local 1,2019/07/24 12:12:22,"
