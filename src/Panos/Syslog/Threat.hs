@@ -120,8 +120,12 @@ miscellaneous (Threat{miscellaneousBounds=Bounds off len,miscellaneousByteArray=
 sequenceNumber :: Threat -> Word64
 sequenceNumber = U.sequenceNumber
 
-serialNumber :: Threat -> Word64
-serialNumber = U.serialNumber
+-- | Serial number of the firewall that generated the log. These
+-- occassionally contain non-numeric characters, so do not attempt
+-- to parse this as a decimal number.
+serialNumber :: Threat -> Bytes
+serialNumber (Threat{serialNumber=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
 
 severity :: Threat -> Bytes
 severity (Threat{severity=Bounds off len,message=msg}) =

@@ -174,10 +174,11 @@ threat_8_1_G = pack $ concat
   , "4294967295,\"contextual.media.net/\""
   ]
 
--- URL threat log. Regression test.
+-- URL threat log. Regression test. Also, the serial number in this
+-- log has non-numeric characters.
 threat_8_1_H :: Bytes
 threat_8_1_H = pack $ concat
-  [ "<14>Dec 10 19:11:09 fw-4.example.com 1,2019/12/10 19:11:08,002926674589,"
+  [ "<14>Dec 10 19:11:09 fw-4.example.com 1,2019/12/10 19:11:08,002926C74589,"
   , "THREAT,url,2049,2019/12/10 19:11:08,192.0.2.123,192.0.2.125,192.0.2.126,"
   , "192.0.2.127,Some-Rule,example\\mbjordan,,web-browsing,vsys1,"
   , "X-Zone,Y-Zone,ethernet2/4.234,ethernet6/7,Forward-Logs,"

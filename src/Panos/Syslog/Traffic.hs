@@ -200,9 +200,12 @@ bytesSent = U.bytesSent
 bytes :: Traffic -> Word64
 bytes = U.bytes
 
--- | Serial number of the firewall that generated the log.
-serialNumber :: Traffic -> Word64
-serialNumber = U.serialNumber
+-- | Serial number of the firewall that generated the log. These
+-- occassionally contain non-numeric characters, so do not attempt
+-- to parse this as a decimal number.
+serialNumber :: Traffic -> Bytes
+serialNumber (Traffic{serialNumber=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
 
 deviceGroupHierarchyLevel1 :: Traffic -> Word64
 deviceGroupHierarchyLevel1 = U.deviceGroupHierarchyLevel1

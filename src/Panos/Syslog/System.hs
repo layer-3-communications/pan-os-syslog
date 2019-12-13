@@ -13,6 +13,7 @@ module Panos.Syslog.System
   , module_
   , object
   , sequenceNumber
+  , serialNumber
   , severity
   , subtype
   , timeGenerated
@@ -75,3 +76,11 @@ timeGenerated = U.timeGenerated
 -- each log type has a unique number space.
 sequenceNumber :: System -> Word64
 sequenceNumber = U.sequenceNumber
+
+-- | Serial number of the firewall that generated the log. These
+-- occassionally contain non-numeric characters, so do not attempt
+-- to parse this as a decimal number.
+serialNumber :: System -> Bytes
+serialNumber (System{serialNumber=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+

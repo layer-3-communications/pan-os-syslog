@@ -63,7 +63,7 @@ data System = System
     -- prefixes the message.
   , receiveTime :: {-# UNPACK #-} !Datetime
     -- In log, presented as: 2019/06/18 15:10:20
-  , serialNumber :: {-# UNPACK #-} !Word64
+  , serialNumber :: {-# UNPACK #-} !Bounds
     -- In log, presented as: 002610378847
   , subtype :: {-# UNPACK #-} !Bounds
     -- Presented as: dhcp, dnsproxy, dos, general, etc.
@@ -93,7 +93,7 @@ data Traffic = Traffic
     -- prefixes the message.
   , receiveTime :: {-# UNPACK #-} !Datetime
     -- In log, presented as: 2019/06/18 15:10:20
-  , serialNumber :: {-# UNPACK #-} !Word64
+  , serialNumber :: {-# UNPACK #-} !Bounds
     -- In log, presented as: 002610378847
   , subtype :: {-# UNPACK #-} !Bounds
     -- Presented as: start, end, drop, and deny
@@ -156,7 +156,7 @@ data Threat = Threat
     -- prefixes the message.
   , receiveTime :: {-# UNPACK #-} !Datetime
     -- In log, presented as: 2019/06/18 15:10:20
-  , serialNumber :: {-# UNPACK #-} !Word64
+  , serialNumber :: {-# UNPACK #-} !Bounds
     -- In log, presented as: 002610378847
   , subtype :: {-# UNPACK #-} !Bounds
     -- Presented as: data, file, flood, packet, scan, spyware, url,
@@ -724,7 +724,7 @@ w16Comma e = Latin.decWord16 e <* Latin.char e ','
 -- host name, however, does provide useful information that does
 -- not exist elsewhere in the log. We should be as flexible
 -- as possible with this somewhat fragile part of the log.
-parserPrefix :: Parser Field s (Bounds,Datetime,Word64)
+parserPrefix :: Parser Field s (Bounds,Datetime,Bounds)
 {-# inline parserPrefix #-}
 parserPrefix = do
   Latin.skipChar ' '
@@ -749,8 +749,7 @@ parserPrefix = do
   Latin.skipChar ' '
   skipThroughComma futureUseDField
   !recv <- parserDatetime receiveTimeDateField receiveTimeTimeField
-  !ser <- fromIntegral <$> Latin.decWord serialNumberField
-  Latin.char serialNumberField ','
+  !ser <- untilComma serialNumberField
   pure (hostBounds,recv,ser)
 
 -- | Decode a PAN-OS syslog message.
@@ -781,8 +780,8 @@ parserLog = do
       _ -> P.fail typeField
     _ -> P.fail typeField
 
-parserTraffic :: Bounds -> Datetime -> Word64 -> Parser Field s Traffic
-parserTraffic syslogHost receiveTime serialNumber = do
+parserTraffic :: Bounds -> Datetime -> Bounds -> Parser Field s Traffic
+parserTraffic !syslogHost receiveTime !serialNumber = do
   subtype <- untilComma subtypeField
   skipThroughComma futureUseAField
   -- The datetime parser consumes the trailing comma
@@ -876,7 +875,7 @@ parserTraffic syslogHost receiveTime serialNumber = do
     , syslogHost
     }
 
-parserSystem :: Bounds -> Datetime -> Word64 -> Parser Field s System
+parserSystem :: Bounds -> Datetime -> Bounds -> Parser Field s System
 parserSystem syslogHost receiveTime serialNumber = do
   subtype <- untilComma subtypeField
   skipThroughComma futureUseAField
@@ -916,8 +915,8 @@ parserSystem syslogHost receiveTime serialNumber = do
     , severity, descriptionBounds, descriptionByteArray
     }
 
-parserThreat :: Bounds -> Datetime -> Word64 -> Parser Field s Threat
-parserThreat syslogHost receiveTime serialNumber = do
+parserThreat :: Bounds -> Datetime -> Bounds -> Parser Field s Threat
+parserThreat !syslogHost receiveTime !serialNumber = do
   subtype <- untilComma subtypeField
   skipThroughComma futureUseAField
   -- the datetime parser also grabs the trailing comma
