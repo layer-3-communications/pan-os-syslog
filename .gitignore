@@ -25,3 +25,5 @@ stack.yaml
 *.swo
 *.swp
 test_results/**
+scripts/validate
+scripts/run
