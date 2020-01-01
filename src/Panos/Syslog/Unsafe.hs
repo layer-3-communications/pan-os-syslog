@@ -68,6 +68,7 @@ data System = System
   , subtype :: {-# UNPACK #-} !Bounds
     -- Presented as: dhcp, dnsproxy, dos, general, etc.
   , timeGenerated :: {-# UNPACK #-} !Datetime
+    -- Presented as: 2019/11/04 08:39:05
   , virtualSystem :: {-# UNPACK #-} !Bounds
   , eventId :: {-# UNPACK #-} !Bounds
   , object :: {-# UNPACK #-} !Bounds

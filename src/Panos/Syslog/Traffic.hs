@@ -40,6 +40,7 @@ module Panos.Syslog.Traffic
   , sourceZone
   , subtype
   , syslogHost
+  , timeGenerated
   , virtualSystem
   , virtualSystemName
   -- * Device Group Hierarchy
@@ -49,6 +50,7 @@ module Panos.Syslog.Traffic
   , deviceGroupHierarchyLevel4
   ) where
 
+import Chronos (Datetime)
 import Data.Bytes.Types (Bytes(..))
 import Panos.Syslog.Unsafe (Traffic(Traffic),Bounds(Bounds))
 import Data.Word (Word64,Word16)
@@ -150,6 +152,10 @@ packetsSent = U.packetsSent
 -- | Source port utilized by the session.
 sourcePort :: Traffic -> Word16
 sourcePort = U.sourcePort
+
+-- | Time the log was generated on the dataplane.
+timeGenerated :: Traffic -> Datetime
+timeGenerated = U.timeGenerated
 
 -- | A 64-bit log entry identifier incremented sequentially;
 -- each log type has a unique number space.

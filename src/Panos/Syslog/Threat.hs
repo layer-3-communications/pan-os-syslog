@@ -91,6 +91,7 @@ threatName (Threat{threatName=Bounds off len,message=msg}) =
 threatId :: Threat -> Word64
 threatId = U.threatId
 
+-- | Time the log was generated on the dataplane.
 timeGenerated :: Threat -> Datetime
 timeGenerated = U.timeGenerated
 
