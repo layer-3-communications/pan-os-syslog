@@ -1195,7 +1195,11 @@ parserDatetime :: e -> e -> Parser e s Datetime
 parserDatetime edate etime = do
   year <- Latin.decWord edate
   Latin.char edate '/'
-  month <- Latin.decWord edate
+  monthPlusOne <- Latin.decWord edate
+  let month = monthPlusOne - 1
+  if month > 11
+    then P.fail edate
+    else pure ()
   Latin.char edate '/'
   day <- Latin.decWord edate
   Latin.char etime ' '
