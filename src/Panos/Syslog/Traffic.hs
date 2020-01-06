@@ -14,6 +14,7 @@ module Panos.Syslog.Traffic
   , bytesReceived
   , bytesSent
   , destinationAddress
+  , destinationCountry
   , destinationPort
   , destinationUser
   , destinationZone
@@ -35,6 +36,7 @@ module Panos.Syslog.Traffic
   , serialNumber
   , sessionEndReason
   , sourceAddress
+  , sourceCountry
   , sourcePort
   , sourceUser
   , sourceZone
@@ -249,4 +251,16 @@ sourceZone (Traffic{sourceZone=Bounds off len,message=msg}) =
 -- | Zone the session was destined to.
 destinationZone :: Traffic -> Bytes
 destinationZone (Traffic{destinationZone=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+-- | Source country or Internal region for private addresses;
+-- maximum length is 32 bytes.
+sourceCountry :: Traffic -> Bytes
+sourceCountry (Traffic{sourceCountry=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+-- | Destination country or Internal region for private addresses.
+-- Maximum length is 32 bytes.
+destinationCountry :: Traffic -> Bytes
+destinationCountry (Traffic{destinationCountry=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}

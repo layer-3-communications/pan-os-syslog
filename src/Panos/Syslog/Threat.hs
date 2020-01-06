@@ -12,6 +12,7 @@ module Panos.Syslog.Threat
   , category
   , contentVersion
   , destinationAddress
+  , destinationCountry
   , destinationPort
   , destinationUser
   , destinationZone
@@ -33,6 +34,7 @@ module Panos.Syslog.Threat
   , serialNumber
   , severity
   , sourceAddress
+  , sourceCountry
   , sourcePort
   , sourceUser
   , sourceZone
@@ -188,3 +190,14 @@ natDestinationIp = U.natDestinationIp
 natSourcePort :: Threat -> Word16
 natSourcePort = U.natSourcePort
 
+-- | Source country or Internal region for private addresses;
+-- maximum length is 32 bytes.
+sourceCountry :: Threat -> Bytes
+sourceCountry (Threat{sourceCountry=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+-- | Destination country or Internal region for private addresses.
+-- Maximum length is 32 bytes.
+destinationCountry :: Threat -> Bytes
+destinationCountry (Threat{destinationCountry=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
