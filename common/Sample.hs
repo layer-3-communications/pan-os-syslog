@@ -11,6 +11,7 @@ module Sample
   , threat_8_1_F
   , threat_8_1_G
   , threat_8_1_H
+  , threat_8_1_I
   , system_8_1_A
   ) where
 
@@ -197,6 +198,21 @@ threat_8_1_H = pack $ concat
   , "bold.css,font-endzonesans-bold/font-endzonesans-bold.css\",,,,"
   , "0,134,0,0,0,Production,GA-PA-FW-1,,,,get,0,,0,,N/A,unknown,"
   , "AppThreat-0-0,0x0,0,4380241866,"
+  ]
+
+-- Spyware threat log.
+threat_8_1_I :: Bytes
+threat_8_1_I = pack $ concat
+  [ "<12>Jan 10 01:56:39 NY-PA-FW-1.example 1,2020/01/10 01:56:38,"
+  , "012862319694,THREAT,spyware,2049,2020/01/10 01:56:38,192.0.2.15,"
+  , "192.0.2.30,192.0.2.31,192.0.2.32,Some-Rule,,,dns,vsys1,Src-Zone,"
+  , "Dst-Zone,ethernet1/9.255,ethernet1/1,Forward-Logs,"
+  , "2020/01/10 01:56:38,146414,1,45476,53,15021,53,0x80402000,udp,"
+  , "sinkhole,\"\",Suspicious DNS Query (generic:comparetvs.net)(320511141),"
+  , "any,medium,client-to-server,267287993,0xa000000000000000,"
+  , "10.0.0.0-10.255.255.255,United States,0,,1315498975425810792,,,"
+  , "0,,,,,,,,0,134,0,0,0,Production,GA-PA-FW-1,,,,,0,,0,,N/A,dns,"
+  , "AppThreat-3218-3729,0x0,0,4294967295,"
   ]
 
 -- System log (IKE delete)

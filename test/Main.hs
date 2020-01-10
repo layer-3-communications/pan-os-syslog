@@ -41,6 +41,8 @@ main = do
   testThreatG
   putStrLn "8.1-Threat-H"
   testThreatH
+  putStrLn "8.1-Threat-I"
+  testThreatI
   putStrLn "8.1-System-A"
   testSystemA
   putStrLn "Finished"
@@ -168,6 +170,15 @@ testThreatH = case decodeLog S.threat_8_1_H of
   Left err -> throwIO err
   Right (LogThreat t) ->
     if | Threat.threatId t /= 9999 ->
+           fail "wrong threat id"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testThreatI :: IO ()
+testThreatI = case decodeLog S.threat_8_1_I of
+  Left err -> throwIO err
+  Right (LogThreat t) ->
+    if | Threat.threatId t /= 320511141 ->
            fail "wrong threat id"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"

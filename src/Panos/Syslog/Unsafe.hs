@@ -26,7 +26,7 @@ import Control.Exception (Exception)
 import Control.Monad.ST.Run (runByteArrayST)
 import Data.Bytes.Parser (Parser)
 import Data.Bytes.Types (Bytes(..),UnmanagedBytes(UnmanagedBytes))
-import Data.Char (ord)
+import Data.Char (ord,isAsciiUpper,isAsciiLower)
 import Data.Primitive (ByteArray)
 import Data.Primitive.Addr (Addr(Addr))
 import Data.Word (Word64,Word32,Word16,Word8)
@@ -1055,7 +1055,7 @@ parserThreatId = Latin.any threatIdField >>= \case
   _ -> do
     startSucc <- Unsafe.cursor
     Latin.skipTrailedBy threatIdField '('
-    end <- Latin.trySatisfy (\c -> c >= 'A' && c <= 'Z') >>= \case
+    end <- Latin.trySatisfy (\c -> isAsciiUpper c || isAsciiLower c) >>= \case
       True -> do
         endSuccSucc <- Unsafe.cursor
         Latin.skipTrailedBy threatIdField '('
