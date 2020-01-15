@@ -45,6 +45,8 @@ import qualified GHC.Pack
 import qualified Net.IP as IP
 import qualified Net.IPv4 as IPv4
 
+-- | Sum that represents all known PAN-OS syslog types. Use 'decodeLog'
+-- to parse a byte sequence into a structured log.
 data Log
   = LogTraffic !Traffic
   | LogThreat !Threat
@@ -55,6 +57,8 @@ data Bounds = Bounds
   {-# UNPACK #-} !Int -- offset
   {-# UNPACK #-} !Int -- length
 
+-- | A PAN-OS system log. Read-only accessors are found in
+-- @Panos.Syslog.System@.
 data System = System
   { message :: {-# UNPACK #-} !ByteArray
     -- The original log
@@ -86,6 +90,8 @@ data System = System
   , deviceName :: {-# UNPACK #-} !Bounds
   }
 
+-- | A PAN-OS traffic log. Read-only accessors are found in
+-- @Panos.Syslog.Traffic@.
 data Traffic = Traffic
   { message :: {-# UNPACK #-} !ByteArray
     -- The original log
@@ -149,6 +155,8 @@ data Traffic = Traffic
   , actionSource :: {-# UNPACK #-} !Bounds
   }
 
+-- | A PAN-OS threat log. Read-only accessors are found in
+-- @Panos.Syslog.Threat@.
 data Threat = Threat
   { message :: {-# UNPACK #-} !ByteArray
     -- The original log
@@ -247,8 +255,9 @@ data Threat = Threat
   , httpHeaders :: {-# UNPACK #-} !Bytes
   }
 
--- | The field that was being parsed when a parse failure
--- occurred.
+-- | The field that was being parsed when a parse failure occurred.
+-- This is typically for useful for libary developers, but to present
+-- it to the end user, call @show@ or @throwIO@.
 newtype Field = Field UnmanagedBytes
 
 instance Show Field where
@@ -753,7 +762,7 @@ parserPrefix = do
   !ser <- untilComma serialNumberField
   pure (hostBounds,recv,ser)
 
--- | Decode a PAN-OS syslog message.
+-- | Decode a PAN-OS syslog message of any type.
 decodeLog :: Bytes -> Either Field Log
 decodeLog b = case P.parseBytes parserLog b of
   P.Failure e -> Left e

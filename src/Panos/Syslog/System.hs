@@ -6,6 +6,7 @@
 {-# language DerivingStrategies #-}
 {-# language GeneralizedNewtypeDeriving #-}
 
+-- | Fields for system logs.
 module Panos.Syslog.System
   ( description
   , deviceName

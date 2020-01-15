@@ -6,6 +6,7 @@
 {-# language DerivingStrategies #-}
 {-# language GeneralizedNewtypeDeriving #-}
 
+-- | Fields for traffic logs.
 module Panos.Syslog.Traffic
   ( -- * Fields
     action
