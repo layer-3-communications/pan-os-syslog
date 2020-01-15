@@ -3,7 +3,7 @@
 {-# language ScopedTypeVariables #-}
 {-# language TypeApplications #-}
 
-import Panos.Syslog (Log(..),decodeLog)
+import Panos.Syslog (Log(..),decode)
 
 import Control.Exception (throwIO)
 import Data.Primitive (ByteArray)
@@ -48,7 +48,7 @@ main = do
   putStrLn "Finished"
 
 testA :: IO ()
-testA = case decodeLog S.traffic_8_1_A of
+testA = case decode S.traffic_8_1_A of
   Left err -> throwIO err
   Right (LogTraffic t) ->
     if | Traffic.deviceName t /= bytes "MY-DEVICE-NAME" ->
@@ -69,7 +69,7 @@ testA = case decodeLog S.traffic_8_1_A of
   Right _ -> fail "wrong log type"
 
 testB :: IO ()
-testB = case decodeLog S.threat_8_1_A of
+testB = case decode S.threat_8_1_A of
   Left err -> throwIO err
   Right (LogThreat t) ->
     if | Threat.contentVersion t /= bytes "AppThreat-1-6" -> fail $
@@ -82,7 +82,7 @@ testB = case decodeLog S.threat_8_1_A of
   Right _ -> fail "wrong log type"
 
 testTrafficB :: IO ()
-testTrafficB = case decodeLog S.traffic_8_1_B of
+testTrafficB = case decode S.traffic_8_1_B of
   Left err -> throwIO err
   Right (LogTraffic t) ->
     if | Traffic.sourceUser t /= bytes "example\\jdoe" ->
@@ -95,7 +95,7 @@ testTrafficB = case decodeLog S.traffic_8_1_B of
   Right _ -> fail "wrong log type"
 
 testC :: IO ()
-testC = case decodeLog S.threat_8_1_B of
+testC = case decode S.threat_8_1_B of
   Left err -> throwIO err
   Right (LogThreat t) ->
     if | Threat.miscellaneous t /= bytes "www.example.com/" -> fail $
@@ -111,7 +111,7 @@ testC = case decodeLog S.threat_8_1_B of
   Right _ -> fail "wrong log type"
 
 testD :: IO ()
-testD = case decodeLog S.threat_8_1_C of
+testD = case decode S.threat_8_1_C of
   Left err -> throwIO err
   Right (LogThreat t) ->
     if | Threat.threatId t /= 30845 -> fail $
@@ -124,7 +124,7 @@ testD = case decodeLog S.threat_8_1_C of
   Right _ -> fail "wrong log type"
 
 testThreatD :: IO ()
-testThreatD = case decodeLog S.threat_8_1_D of
+testThreatD = case decode S.threat_8_1_D of
   Left err -> throwIO err
   Right (LogThreat t) ->
     if | Threat.threatName t /= bytes "Email Link" -> fail $
@@ -136,7 +136,7 @@ testThreatD = case decodeLog S.threat_8_1_D of
   Right _ -> fail "wrong log type"
 
 testThreatE :: IO ()
-testThreatE = case decodeLog S.threat_8_1_E of
+testThreatE = case decode S.threat_8_1_E of
   Left err -> throwIO err
   Right (LogThreat t) ->
     if | Threat.threatName t /= bytes "Windows Executable" -> fail $
@@ -146,7 +146,7 @@ testThreatE = case decodeLog S.threat_8_1_E of
   Right _ -> fail "wrong log type"
 
 testThreatF :: IO ()
-testThreatF = case decodeLog S.threat_8_1_F of
+testThreatF = case decode S.threat_8_1_F of
   Left err -> throwIO err
   Right (LogThreat t) ->
     if | Threat.threatName t /= bytes "Temporary TMP File" ->
@@ -155,7 +155,7 @@ testThreatF = case decodeLog S.threat_8_1_F of
   Right _ -> fail "wrong log type"
 
 testThreatG :: IO ()
-testThreatG = case decodeLog S.threat_8_1_G of
+testThreatG = case decode S.threat_8_1_G of
   Left err -> throwIO err
   Right (LogThreat t) ->
     if | Threat.threatName t /= bytes "Hypertext Preprocessor PHP File" ->
@@ -166,7 +166,7 @@ testThreatG = case decodeLog S.threat_8_1_G of
   Right _ -> fail "wrong log type"
 
 testThreatH :: IO ()
-testThreatH = case decodeLog S.threat_8_1_H of
+testThreatH = case decode S.threat_8_1_H of
   Left err -> throwIO err
   Right (LogThreat t) ->
     if | Threat.threatId t /= 9999 ->
@@ -175,7 +175,7 @@ testThreatH = case decodeLog S.threat_8_1_H of
   Right _ -> fail "wrong log type"
 
 testThreatI :: IO ()
-testThreatI = case decodeLog S.threat_8_1_I of
+testThreatI = case decode S.threat_8_1_I of
   Left err -> throwIO err
   Right (LogThreat t) ->
     if | Threat.threatId t /= 320511141 ->
@@ -184,7 +184,7 @@ testThreatI = case decodeLog S.threat_8_1_I of
   Right _ -> fail "wrong log type"
 
 testSystemA :: IO ()
-testSystemA = case decodeLog S.system_8_1_A of
+testSystemA = case decode S.system_8_1_A of
   Left err -> throwIO err
   Right (LogSystem t) ->
     if | System.deviceName t /= bytes "NY-DC-FW-2" -> fail $

@@ -6,7 +6,7 @@ module Panos.Syslog
   , U.System
   , U.Field
     -- * Decoding
-  , U.decodeLog
+  , U.decode
   ) where
 
 import qualified Panos.Syslog.Unsafe as U

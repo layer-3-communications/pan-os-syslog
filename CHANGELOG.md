@@ -1,5 +1,5 @@
 # Revision history for palo-alto-syslog
 
-## 0.1.0.0 -- YYYY-mm-dd
+## 0.1.0.0 -- 2020-01-15
 
-* First version. Released on an unsuspecting world.
+* Initial release.

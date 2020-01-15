@@ -21,9 +21,9 @@ description:
   * Do a minimum amount of useful work on each field. The reasoning is
     that users will typically discard most of the fields, so there is
     no point wasting clock cycles doing unneeded work. Its hard to define
-    what this is precisely. Roughly, the rule we follow is that integral
-    fields are parsed as @Word64@, and non-integral fields are @Bytes@.
-    We never attempt to validate hostnames, URIs, etc.
+    what this is precisely. Roughly, the rule this library follows is that
+    integral fields are parsed as @Word64@, and non-integral fields are
+    @Bytes@. This library does not attempt to validate hostnames, URIs, etc.
   .
   A good way to think about this library is that it is kind of like
   a tokenizer. It is the first step when parsing PAN-OS logs into

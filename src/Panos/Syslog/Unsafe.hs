@@ -17,7 +17,7 @@ module Panos.Syslog.Unsafe
   , Field(..)
   , Bounds(..)
     -- * Decoding
-  , decodeLog
+  , decode
   ) where
 
 import Chronos (DayOfMonth(..),Date(..))
@@ -45,7 +45,7 @@ import qualified GHC.Pack
 import qualified Net.IP as IP
 import qualified Net.IPv4 as IPv4
 
--- | Sum that represents all known PAN-OS syslog types. Use 'decodeLog'
+-- | Sum that represents all known PAN-OS syslog types. Use 'decode'
 -- to parse a byte sequence into a structured log.
 data Log
   = LogTraffic !Traffic
@@ -762,9 +762,9 @@ parserPrefix = do
   !ser <- untilComma serialNumberField
   pure (hostBounds,recv,ser)
 
--- | Decode a PAN-OS syslog message of any type.
-decodeLog :: Bytes -> Either Field Log
-decodeLog b = case P.parseBytes parserLog b of
+-- | Decode a PAN-OS syslog message of an unknown type.
+decode :: Bytes -> Either Field Log
+decode b = case P.parseBytes parserLog b of
   P.Failure e -> Left e
   P.Success (P.Slice _ len r) -> case len of
     0 -> Right r
