@@ -796,13 +796,13 @@ parserTraffic !syslogHost receiveTime !serialNumber = do
   skipThroughComma futureUseAField
   -- The datetime parser consumes the trailing comma
   timeGenerated <- parserDatetime timeGeneratedDateField timeGeneratedTimeField
-  sourceAddress <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes sourceAddressField
+  sourceAddress <- IP.parserUtf8Bytes sourceAddressField
   Latin.char sourceAddressField ','
-  destinationAddress <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes destinationAddressField
+  destinationAddress <- IP.parserUtf8Bytes destinationAddressField
   Latin.char destinationAddressField ','
-  natSourceIp <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes natSourceIpField
+  natSourceIp <- IP.parserUtf8Bytes natSourceIpField
   Latin.char natSourceIpField ','
-  natDestinationIp <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes natDestinationIpField
+  natDestinationIp <- IP.parserUtf8Bytes natDestinationIpField
   Latin.char natDestinationIpField ','
   ruleName <- untilComma ruleNameField
   sourceUser <- untilComma sourceUserField
@@ -931,13 +931,13 @@ parserThreat !syslogHost receiveTime !serialNumber = do
   skipThroughComma futureUseAField
   -- the datetime parser also grabs the trailing comma
   timeGenerated <- parserDatetime timeGeneratedDateField timeGeneratedTimeField
-  sourceAddress <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes sourceAddressField
+  sourceAddress <- IP.parserUtf8Bytes sourceAddressField
   Latin.char sourceAddressField ','
-  destinationAddress <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes destinationAddressField
+  destinationAddress <- IP.parserUtf8Bytes destinationAddressField
   Latin.char destinationAddressField ','
-  natSourceIp <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes natSourceIpField
+  natSourceIp <- IP.parserUtf8Bytes natSourceIpField
   Latin.char natSourceIpField ','
-  natDestinationIp <- IP.fromIPv4 <$> IPv4.parserUtf8Bytes natDestinationIpField
+  natDestinationIp <- IP.parserUtf8Bytes natDestinationIpField
   Latin.char natDestinationIpField ','
   ruleName <- untilComma ruleNameField
   sourceUser <- untilComma sourceUserField

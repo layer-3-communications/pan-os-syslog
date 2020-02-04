@@ -7,7 +7,7 @@ import Data.Bool (bool)
 import Control.Exception
 import System.IO.Error (isEOFError)
 import Foreign.C.Types (CChar)
-import Panos.Syslog (decodeLog)
+import Panos.Syslog (decode)
 
 import qualified Data.Primitive as PM
 import qualified Data.Primitive.Ptr as PM
@@ -20,7 +20,7 @@ main = do
         Nothing -> pure ()
         Just b0 -> do
           b1 <- b2b b0
-          case decodeLog (Bytes.fromByteArray b1) of
+          case decode (Bytes.fromByteArray b1) of
             Left err -> fail $ "On line " ++ show ix ++ ", " ++ show err
             Right _ -> go (ix + 1)
   go 0
