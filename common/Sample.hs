@@ -13,6 +13,7 @@ module Sample
   , threat_8_1_G
   , threat_8_1_H
   , threat_8_1_I
+  , threat_9_0_A
   , system_8_1_A
   ) where
 
@@ -226,6 +227,20 @@ threat_8_1_I = pack $ concat
   , "10.0.0.0-10.255.255.255,United States,0,,1315498975425810792,,,"
   , "0,,,,,,,,0,134,0,0,0,Production,GA-PA-FW-1,,,,,0,,0,,N/A,dns,"
   , "AppThreat-3218-3729,0x0,0,4294967295,"
+  ]
+
+-- Web browsing threat log from PAN-OS 9.0
+threat_9_0_A :: Bytes
+threat_9_0_A = pack $ concat
+  [ "Mar 9 14:47:44 firewall1.example.com 1,2020/03/09 14:47:44,001701012545,"
+  , "THREAT,url,2304,2020/03/09 14:47:44,192.0.2.101,192.0.2.102,"
+  , "192.0.2.103,192.0.2.104,FOO to BAR,example\\jdoe,,ssl,vsys1,FOO,BAR,"
+  , "ethernet1/6,ethernet1/7,My-Log-Forwarding,2020/03/09 14:47:44,455102,"
+  , "1,62475,443,31963,443,0x40f000,tcp,alert,\"dt.adsafeprotected.com/\","
+  , "(9999),web-advertisements,informational,client-to-server,2314781488,"
+  , "0x2000000000000000,United States,United States,0,,0,,,0,,,,,,,,0,11,"
+  , "0,0,0,,firewall1,,,,,0,,0,,N/A,unknown,AppThreat-0-0,0x0,0,4294967295,"
+  , ",\"web-advertisements,low-risk\",edd29e10-d927-1753-867f-0108b01b80de,0"
   ]
 
 -- System log (IKE delete)

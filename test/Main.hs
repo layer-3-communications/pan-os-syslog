@@ -45,6 +45,8 @@ main = do
   testThreatH
   putStrLn "8.1-Threat-I"
   testThreatI
+  putStrLn "9.0-Threat-A"
+  testThreat_9_0_A
   putStrLn "8.1-System-A"
   testSystemA
   putStrLn "Finished"
@@ -128,6 +130,16 @@ testC = case decode S.threat_8_1_B of
        | Threat.contentVersion t /= bytes "AppThreat-3-7" -> fail $
            "wrong content version:\nExpected: AppThreat-3-7\nActually: " ++
            prettyBytes (Threat.contentVersion t) ++ "\n"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testThreat_9_0_A :: IO ()
+testThreat_9_0_A = case decode S.threat_9_0_A of
+  Left err -> throwIO err
+  Right (LogThreat t) ->
+    if | Threat.miscellaneous t /= bytes "dt.adsafeprotected.com/" -> fail $
+           "wrong miscellaneous (URL):\nExpected: dt.adsafeprotected.com/\nActually: " ++
+           prettyBytes (Threat.miscellaneous t) ++ "\n"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"
 

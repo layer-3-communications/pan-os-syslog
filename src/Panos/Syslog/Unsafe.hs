@@ -256,6 +256,7 @@ data Threat = Threat
   , payloadProtocolId :: {-# UNPACK #-} !Word64
     -- TODO: skipping over other fields here
   , httpHeaders :: {-# UNPACK #-} !Bytes
+  , ruleUuid :: {-# UNPACK #-} !Word128
   }
 
 -- | The field that was being parsed when a parse failure occurred.
@@ -398,6 +399,10 @@ flagsField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
 ipProtocolField :: Field
 ipProtocolField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
   where !x# = "ipProtocol"#
+
+urlCategoryListField :: Field
+urlCategoryListField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "urlCategoryList"#
 
 actionField :: Field
 actionField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
@@ -1054,31 +1059,65 @@ parserThreat !syslogHost receiveTime !serialNumber = do
   -- TODO: Handle HTTP Headers correctly
   httpHeaders <- finalOptionallyQuoted httpHeadersField
   message <- Unsafe.expose
-  pure Threat
-    { subtype , timeGenerated , sourceAddress , destinationAddress 
-    , natSourceIp , natDestinationIp , ruleName , sourceUser 
-    , destinationUser , application , virtualSystem , sourceZone 
-    , destinationZone , inboundInterface , outboundInterface , logAction 
-    , sessionId , repeatCount , sourcePort , destinationPort 
-    , natSourcePort , natDestinationPort , ipProtocol 
-    , action , category 
-    , sequenceNumber , sourceCountry , destinationCountry 
-    , deviceGroupHierarchyLevel1 , deviceGroupHierarchyLevel2 
-    , deviceGroupHierarchyLevel3 , deviceGroupHierarchyLevel4 
-    , virtualSystemName , deviceName , receiveTime
-    , serialNumber, actionFlags, flags, message
-    , syslogHost, threatId, severity, direction, threatName
-    , contentType, pcapId
-    , fileDigest, cloud, urlIndex
-    , userAgentBounds, sctpAssociationId
-    , userAgentByteArray, fileType
-    , forwardedFor, referer
-    , sender, subject, recipient
-    , reportId, httpMethod, contentVersion
-    , threatCategory, miscellaneousBounds, miscellaneousByteArray
-    , payloadProtocolId, parentSessionId, tunnelId
-    , httpHeaders
-    }
+  -- In PAN-OS 8.1, threat logs end after http headers.
+  -- PAN-OS 9.0 adds three more fields.
+  P.isEndOfInput >>= \case
+    False -> do
+      Latin.char urlCategoryListField ','
+      parserOptionallyQuoted_ urlCategoryListField
+      ruleUuid <- UUID.parserHyphenated ruleUuidField
+      Latin.char http2ConnectionField ','
+      Latin.skipDigits1 http2ConnectionField
+      pure Threat
+        { subtype , timeGenerated , sourceAddress , destinationAddress 
+        , natSourceIp , natDestinationIp , ruleName , sourceUser 
+        , destinationUser , application , virtualSystem , sourceZone 
+        , destinationZone , inboundInterface , outboundInterface , logAction 
+        , sessionId , repeatCount , sourcePort , destinationPort 
+        , natSourcePort , natDestinationPort , ipProtocol 
+        , action , category 
+        , sequenceNumber , sourceCountry , destinationCountry 
+        , deviceGroupHierarchyLevel1 , deviceGroupHierarchyLevel2 
+        , deviceGroupHierarchyLevel3 , deviceGroupHierarchyLevel4 
+        , virtualSystemName , deviceName , receiveTime
+        , serialNumber, actionFlags, flags, message
+        , syslogHost, threatId, severity, direction, threatName
+        , contentType, pcapId
+        , fileDigest, cloud, urlIndex
+        , userAgentBounds, sctpAssociationId
+        , userAgentByteArray, fileType
+        , forwardedFor, referer
+        , sender, subject, recipient
+        , reportId, httpMethod, contentVersion
+        , threatCategory, miscellaneousBounds, miscellaneousByteArray
+        , payloadProtocolId, parentSessionId, tunnelId
+        , httpHeaders, ruleUuid
+        }
+    True -> pure Threat
+      { subtype , timeGenerated , sourceAddress , destinationAddress 
+      , natSourceIp , natDestinationIp , ruleName , sourceUser 
+      , destinationUser , application , virtualSystem , sourceZone 
+      , destinationZone , inboundInterface , outboundInterface , logAction 
+      , sessionId , repeatCount , sourcePort , destinationPort 
+      , natSourcePort , natDestinationPort , ipProtocol 
+      , action , category 
+      , sequenceNumber , sourceCountry , destinationCountry 
+      , deviceGroupHierarchyLevel1 , deviceGroupHierarchyLevel2 
+      , deviceGroupHierarchyLevel3 , deviceGroupHierarchyLevel4 
+      , virtualSystemName , deviceName , receiveTime
+      , serialNumber, actionFlags, flags, message
+      , syslogHost, threatId, severity, direction, threatName
+      , contentType, pcapId
+      , fileDigest, cloud, urlIndex
+      , userAgentBounds, sctpAssociationId
+      , userAgentByteArray, fileType
+      , forwardedFor, referer
+      , sender, subject, recipient
+      , reportId, httpMethod, contentVersion
+      , threatCategory, miscellaneousBounds, miscellaneousByteArray
+      , payloadProtocolId, parentSessionId, tunnelId
+      , httpHeaders, ruleUuid = 0
+      }
 
 -- Threat IDs are weird. There are three different kinds of
 -- strings that can show up here:
