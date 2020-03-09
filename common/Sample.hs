@@ -3,6 +3,7 @@
 module Sample
   ( traffic_8_1_A
   , traffic_8_1_B
+  , traffic_9_0_A
   , threat_8_1_A
   , threat_8_1_B
   , threat_8_1_C
@@ -61,6 +62,18 @@ traffic_8_1_B = pack $ concat
   , "2176523185,0x8000000000000000,10.0.0.0-10.255.255.255,United States,0,"
   , "18,21,tcp-fin,134,0,0,0,Some-Name,TX-PAN-FW-1,my-policy,,,0,,0,,N/A,"
   , "0,0,0,0"
+  ]
+
+traffic_9_0_A :: Bytes
+traffic_9_0_A = pack $ concat
+  [ "<14> Mar 9 14:13:44 NY-PAN-FW-5.example.com 1,2020/03/09 14:13:44,"
+  , "019624168632,TRAFFIC,end,2304,2020/03/09 14:13:44,192.0.2.73,"
+  , "192.0.2.117,0.0.0.0,0.0.0.0,NEAR to FAR,,,insufficient-data,"
+  , "vsys1,NEAR-ZONE,FAR-ZONE,tunnel.163,ethernet1/4,Forward-The-Logs,"
+  , "2020/03/09 14:13:44,385404,1,56451,8475,0,0,0x401c,tcp,allow,1760,"
+  , "1051,709,19,2020/03/09 14:13:24,16,any,0,6412095715,0x0,United States,"
+  , "10.0.0.0-10.255.255.255,0,12,7,tcp-fin,11,0,0,0,,NY-PAN-FW-5,"
+  , "my-policy,,,0,,0,,N/A,0,0,0,0,321ef4bf-801e-1c89-b341-efb2898ba2be,0"
   ]
 
 -- Threat log for web browsing

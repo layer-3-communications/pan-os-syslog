@@ -32,6 +32,7 @@ import Data.Primitive.Addr (Addr(Addr))
 import Data.Word (Word64,Word32,Word16,Word8)
 import GHC.Exts (Ptr(Ptr),Int(I#),Int#,Addr#)
 import Net.Types (IP)
+import Data.WideWord (Word128)
 
 import qualified Control.Exception
 import qualified Data.Bytes.Parser as P
@@ -44,6 +45,7 @@ import qualified GHC.Exts as Exts
 import qualified GHC.Pack
 import qualified Net.IP as IP
 import qualified Net.IPv4 as IPv4
+import qualified UUID
 
 -- | Sum that represents all known PAN-OS syslog types. Use 'decode'
 -- to parse a byte sequence into a structured log.
@@ -153,6 +155,7 @@ data Traffic = Traffic
   , virtualSystemName :: {-# UNPACK #-} !Bounds
   , deviceName :: {-# UNPACK #-} !Bounds
   , actionSource :: {-# UNPACK #-} !Bounds
+  , ruleUuid :: {-# UNPACK #-} !Word128
   }
 
 -- | A PAN-OS threat log. Read-only accessors are found in
@@ -652,6 +655,14 @@ sctpChunksReceivedField :: Field
 sctpChunksReceivedField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
   where !x# = "field:chunks_received"#
 
+ruleUuidField :: Field
+ruleUuidField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "field:rule_uuid"#
+
+http2ConnectionField :: Field
+http2ConnectionField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "field:http_2_connection"#
+
 moduleField :: Field
 moduleField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
   where !x# = "field:module"#
@@ -867,23 +878,49 @@ parserTraffic !syslogHost receiveTime !serialNumber = do
   skipDigitsThroughComma sctpChunksSentField
   Latin.skipDigits1 sctpChunksReceivedField
   message <- Unsafe.expose
-  pure Traffic
-    { subtype , timeGenerated , sourceAddress , destinationAddress 
-    , natSourceIp , natDestinationIp , ruleName , sourceUser 
-    , destinationUser , application , virtualSystem , sourceZone 
-    , destinationZone , inboundInterface , outboundInterface , logAction 
-    , sessionId , repeatCount , sourcePort , destinationPort 
-    , natSourcePort , natDestinationPort , ipProtocol 
-    , action , bytes , bytesSent , bytesReceived 
-    , packets , startTime , elapsedTime , category 
-    , sequenceNumber , sourceCountry , destinationCountry 
-    , packetsSent , sessionEndReason 
-    , deviceGroupHierarchyLevel1 , deviceGroupHierarchyLevel2 
-    , deviceGroupHierarchyLevel3 , deviceGroupHierarchyLevel4 
-    , virtualSystemName , deviceName , actionSource , receiveTime
-    , serialNumber, packetsReceived, actionFlags, flags, message
-    , syslogHost
-    }
+  -- In PAN-OS 8.1, traffic logs end after SCTP chunks received.
+  -- PAN-OS 9.0 adds two additional fields: rule uuid and a number
+  -- that has something to do with HTTP/2.
+  P.isEndOfInput >>= \case
+    False -> do
+      Latin.char ruleUuidField ','
+      ruleUuid <- UUID.parserHyphenated ruleUuidField
+      Latin.char http2ConnectionField ','
+      Latin.skipDigits1 http2ConnectionField
+      pure Traffic
+        { subtype , timeGenerated , sourceAddress , destinationAddress 
+        , natSourceIp , natDestinationIp , ruleName , sourceUser 
+        , destinationUser , application , virtualSystem , sourceZone 
+        , destinationZone , inboundInterface , outboundInterface , logAction 
+        , sessionId , repeatCount , sourcePort , destinationPort 
+        , natSourcePort , natDestinationPort , ipProtocol 
+        , action , bytes , bytesSent , bytesReceived 
+        , packets , startTime , elapsedTime , category 
+        , sequenceNumber , sourceCountry , destinationCountry 
+        , packetsSent , sessionEndReason 
+        , deviceGroupHierarchyLevel1 , deviceGroupHierarchyLevel2 
+        , deviceGroupHierarchyLevel3 , deviceGroupHierarchyLevel4 
+        , virtualSystemName , deviceName , actionSource , receiveTime
+        , serialNumber, packetsReceived, actionFlags, flags, message
+        , syslogHost, ruleUuid
+        }
+    True -> pure Traffic
+      { subtype , timeGenerated , sourceAddress , destinationAddress 
+      , natSourceIp , natDestinationIp , ruleName , sourceUser 
+      , destinationUser , application , virtualSystem , sourceZone 
+      , destinationZone , inboundInterface , outboundInterface , logAction 
+      , sessionId , repeatCount , sourcePort , destinationPort 
+      , natSourcePort , natDestinationPort , ipProtocol 
+      , action , bytes , bytesSent , bytesReceived 
+      , packets , startTime , elapsedTime , category 
+      , sequenceNumber , sourceCountry , destinationCountry 
+      , packetsSent , sessionEndReason 
+      , deviceGroupHierarchyLevel1 , deviceGroupHierarchyLevel2 
+      , deviceGroupHierarchyLevel3 , deviceGroupHierarchyLevel4 
+      , virtualSystemName , deviceName , actionSource , receiveTime
+      , serialNumber, packetsReceived, actionFlags, flags, message
+      , syslogHost, ruleUuid = 0
+      }
 
 parserSystem :: Bounds -> Datetime -> Bounds -> Parser Field s System
 parserSystem syslogHost receiveTime serialNumber = do

@@ -10,6 +10,7 @@
 module Panos.Syslog.Traffic
   ( -- * Fields
     action
+  , actionSource
   , application
   , bytes
   , bytesReceived
@@ -33,6 +34,7 @@ module Panos.Syslog.Traffic
   , packetsReceived
   , packetsSent
   , ruleName
+  , ruleUuid
   , sequenceNumber
   , serialNumber
   , sessionEndReason
@@ -58,6 +60,7 @@ import Data.Bytes.Types (Bytes(..))
 import Panos.Syslog.Unsafe (Traffic(Traffic),Bounds(Bounds))
 import Data.Word (Word64,Word16)
 import Net.Types (IP)
+import Data.WideWord (Word128)
 import qualified Panos.Syslog.Unsafe as U
 
 -- | IP protocol associated with the session.
@@ -88,6 +91,14 @@ subtype (Traffic{subtype=Bounds off len,message=msg}) =
 -- | Name of the rule that the session matched.
 ruleName :: Traffic -> Bytes
 ruleName (Traffic{ruleName=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+-- | Specifies whether the action taken to allow or block an
+-- application was defined in the application or in policy. The
+-- actions can be @allow@, @deny@, @drop@, @reset-server@, @reset-client@
+-- or @reset-both@ for the session.
+actionSource :: Traffic -> Bytes
+actionSource (Traffic{actionSource=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
 
 -- | Interface that the session was sourced from.
@@ -168,6 +179,10 @@ sequenceNumber = U.sequenceNumber
 -- | Post-NAT source port.
 natSourcePort :: Traffic -> Word16
 natSourcePort = U.natSourcePort
+
+-- | The UUID that permanently identifies the rule.
+ruleUuid :: Traffic -> Word128
+ruleUuid = U.ruleUuid
 
 -- | Destination port utilized by the session.
 destinationPort :: Traffic -> Word16
