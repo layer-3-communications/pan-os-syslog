@@ -1171,7 +1171,8 @@ parserOptionallyQuoted_ e = Latin.any e >>= \case
 -- Precondition: the cursor is placed at the beginning of the
 -- possibly-quoted content. That is, the comma preceeding has
 -- already been consumed. This is very similar to parserOptionallyQuoted,
--- but it differs slightly because there is no trailing comma. 
+-- but it differs slightly because might not be a trailing comma. If
+-- there is, it gets left alone.
 finalOptionallyQuoted :: e -> Parser e s Bytes
 finalOptionallyQuoted e = Latin.opt >>= \case
   Nothing -> do
@@ -1191,6 +1192,10 @@ finalOptionallyQuoted e = Latin.opt >>= \case
         else do
           let !r = escapeQuotes Bytes{array,offset=start,length=(end - start)}
           pure $! Bytes{array=r,offset=0,length=PM.sizeofByteArray r}
+    ',' -> do
+      Unsafe.unconsume 1
+      !arr <- Unsafe.expose
+      pure $! Bytes arr 0 0
     _ -> do
       !startSucc <- Unsafe.cursor
       Latin.skipUntil ','
@@ -1273,6 +1278,9 @@ consumeFinalQuoted e !n = do
     Nothing -> pure n
     Just c -> case c of
       '"' -> consumeFinalQuoted e (n + 1)
+      ',' -> do
+        Unsafe.unconsume 1
+        pure n
       _ -> P.fail e
 
 parserDatetime :: e -> e -> Parser e s Datetime
