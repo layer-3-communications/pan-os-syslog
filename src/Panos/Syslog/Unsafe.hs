@@ -668,6 +668,10 @@ http2ConnectionField :: Field
 http2ConnectionField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
   where !x# = "field:http_2_connection"#
 
+linkChangeCountField :: Field
+linkChangeCountField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "field:link_change_count_field"#
+
 moduleField :: Field
 moduleField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
   where !x# = "field:module"#
@@ -892,6 +896,12 @@ parserTraffic !syslogHost receiveTime !serialNumber = do
       ruleUuid <- UUID.parserHyphenated ruleUuidField
       Latin.char http2ConnectionField ','
       Latin.skipDigits1 http2ConnectionField
+      -- PAN-OS 9.1 adds several more fields (mostly SD-WAN) after the
+      -- http 2 connection field. For the time being, we ignored all of
+      -- these, failing if any are present.
+      P.isEndOfInput >>= \case
+        True -> pure ()
+        False -> P.cstring linkChangeCountField (Ptr ",0,,,,,,,"#)
       pure Traffic
         { subtype , timeGenerated , sourceAddress , destinationAddress 
         , natSourceIp , natDestinationIp , ruleName , sourceUser 
