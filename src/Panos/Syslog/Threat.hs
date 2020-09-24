@@ -45,6 +45,7 @@ module Panos.Syslog.Threat
   , threatId
   , threatName
   , timeGenerated
+  , urlCategoryList
   , virtualSystemName
   ) where
 
@@ -53,6 +54,7 @@ import Panos.Syslog.Unsafe (Threat(Threat),Bounds(Bounds))
 import Data.Word (Word64,Word16)
 import Chronos (Datetime)
 import Net.Types (IP)
+import qualified Data.Bytes as Bytes
 import qualified Panos.Syslog.Unsafe as U
 
 -- | Subtype of threat log. Values include: @data@, @file@, @flood@,
@@ -238,3 +240,11 @@ sourceCountry (Threat{sourceCountry=Bounds off len,message=msg}) =
 destinationCountry :: Threat -> Bytes
 destinationCountry (Threat{destinationCountry=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
+
+-- | Destination country or Internal region for private addresses.
+-- Maximum length is 32 bytes.
+urlCategoryList :: Threat -> Maybe Bytes
+{-# inline urlCategoryList #-}
+urlCategoryList (Threat{urlCategoryList=x}) = case Bytes.length x of
+  0 -> Nothing
+  _ -> Just x

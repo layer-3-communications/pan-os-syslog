@@ -256,6 +256,7 @@ data Threat = Threat
   , payloadProtocolId :: {-# UNPACK #-} !Word64
     -- TODO: skipping over other fields here
   , httpHeaders :: {-# UNPACK #-} !Bytes
+  , urlCategoryList :: {-# UNPACK #-} !Bytes
   , ruleUuid :: {-# UNPACK #-} !Word128
   }
 
@@ -1074,7 +1075,7 @@ parserThreat !syslogHost receiveTime !serialNumber = do
   P.isEndOfInput >>= \case
     False -> do
       Latin.char urlCategoryListField ','
-      parserOptionallyQuoted_ urlCategoryListField
+      !urlCategoryList <- parserOptionallyQuoted urlCategoryListField
       ruleUuid <- UUID.parserHyphenated ruleUuidField
       Latin.char http2ConnectionField ','
       Latin.skipDigits1 http2ConnectionField
@@ -1101,7 +1102,7 @@ parserThreat !syslogHost receiveTime !serialNumber = do
         , reportId, httpMethod, contentVersion
         , threatCategory, miscellaneousBounds, miscellaneousByteArray
         , payloadProtocolId, parentSessionId, tunnelId
-        , httpHeaders, ruleUuid
+        , httpHeaders, ruleUuid, urlCategoryList
         }
     True -> pure Threat
       { subtype , timeGenerated , sourceAddress , destinationAddress 
@@ -1126,7 +1127,9 @@ parserThreat !syslogHost receiveTime !serialNumber = do
       , reportId, httpMethod, contentVersion
       , threatCategory, miscellaneousBounds, miscellaneousByteArray
       , payloadProtocolId, parentSessionId, tunnelId
-      , httpHeaders, ruleUuid = 0
+      , httpHeaders
+      , ruleUuid = 0
+      , urlCategoryList = Bytes message 0 0
       }
 
 -- Threat IDs are weird. There are three different kinds of
