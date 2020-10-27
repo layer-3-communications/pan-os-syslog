@@ -18,6 +18,7 @@ module Panos.Syslog.Threat
   , destinationUser
   , destinationZone
   , deviceName
+  , fileDigest
   , httpHeaders
   , httpMethod
   , inboundInterface
@@ -97,6 +98,15 @@ destinationZone (Threat{destinationZone=Bounds off len,message=msg}) =
 -- | The hostname of the firewall on which the session was logged.
 deviceName :: Threat -> Bytes
 deviceName (Threat{deviceName=Bounds off len,message=msg}) =
+  Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
+
+-- | The file digest string shows the binary hash of the file sent
+-- to be analyzed by the WildFire service.
+--
+-- This is sometimes MD5 and sometimes SHA256. Rather than attempting
+-- to decode it, it is just left as bytes.
+fileDigest :: Threat -> Bytes
+fileDigest (Threat{fileDigest=Bounds off len,message=msg}) =
   Bytes{offset=fromIntegral off,length=fromIntegral len,array=msg}
 
 -- | Palo Alto Networks identifier for the threat. It is a description
