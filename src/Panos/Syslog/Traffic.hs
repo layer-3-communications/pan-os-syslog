@@ -33,11 +33,13 @@ module Panos.Syslog.Traffic
   , packets
   , packetsReceived
   , packetsSent
+  , repeatCount
   , ruleName
   , ruleUuid
   , sequenceNumber
   , serialNumber
   , sessionEndReason
+  , sessionId
   , sourceAddress
   , sourceCountry
   , sourcePort
@@ -224,6 +226,10 @@ bytesSent = U.bytesSent
 bytes :: Traffic -> Word64
 bytes = U.bytes
 
+-- | Number of total bytes (transmit and receive) for the session.
+repeatCount :: Traffic -> Word64
+repeatCount = U.repeatCount
+
 -- | Serial number of the firewall that generated the log. These
 -- occassionally contain non-numeric characters, so do not attempt
 -- to parse this as a decimal number.
@@ -280,3 +286,7 @@ sourceCountry (Traffic{sourceCountry=Bounds off len,message=msg}) =
 destinationCountry :: Traffic -> Bytes
 destinationCountry (Traffic{destinationCountry=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
+
+-- | An internal numerical identifier applied to each session.
+sessionId :: Traffic -> Word64
+sessionId = U.sessionId

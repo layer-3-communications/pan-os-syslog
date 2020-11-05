@@ -30,10 +30,12 @@ module Panos.Syslog.Threat
   , outboundInterface
   , recipient
   , referer
+  , repeatCount
   , ruleName
   , sender
   , sequenceNumber
   , serialNumber
+  , sessionId
   , severity
   , sourceAddress
   , sourceCountry
@@ -251,10 +253,19 @@ destinationCountry :: Threat -> Bytes
 destinationCountry (Threat{destinationCountry=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
 
--- | Destination country or Internal region for private addresses.
--- Maximum length is 32 bytes.
+-- | Lists the URL Filtering categories that the firewall used to enforce policy.
+--
+-- This field only exists in PAN-OS 9.0 and up.
 urlCategoryList :: Threat -> Maybe Bytes
 {-# inline urlCategoryList #-}
 urlCategoryList (Threat{urlCategoryList=x}) = case Bytes.length x of
   0 -> Nothing
   _ -> Just x
+
+-- | Number of total bytes (transmit and receive) for the session.
+repeatCount :: Threat -> Word64
+repeatCount = U.repeatCount
+
+-- | An internal numerical identifier applied to each session.
+sessionId :: Threat -> Word64
+sessionId = U.sessionId
