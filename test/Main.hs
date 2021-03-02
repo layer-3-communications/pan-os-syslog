@@ -47,6 +47,8 @@ main = do
   testThreatI
   putStrLn "9.0-Threat-A"
   testThreat_9_0_A
+  putStrLn "9.1-Threat-A"
+  testThreat_9_1_A
   putStrLn "8.1-System-A"
   testSystemA
   putStrLn "Finished"
@@ -139,6 +141,17 @@ testThreat_9_0_A = case decode S.threat_9_0_A of
   Right (LogThreat t) ->
     if | Threat.miscellaneous t /= bytes "dt.adsafeprotected.com/" -> fail $
            "wrong miscellaneous (URL):\nExpected: dt.adsafeprotected.com/\nActually: " ++
+           prettyBytes (Threat.miscellaneous t) ++ "\n"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testThreat_9_1_A :: IO ()
+testThreat_9_1_A = case decode S.threat_9_1_A of
+  Left err -> throwIO err
+  Right (LogThreat t) ->
+    if | Threat.miscellaneous t /= bytes "192.0.2.17_solarwinds_zero_configuration:5986/" -> fail $
+           "wrong miscellaneous (URL):\nExpected: " ++
+           "192.0.2.17_solarwinds_zero_configuration:5986/\nActually: " ++
            prettyBytes (Threat.miscellaneous t) ++ "\n"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"

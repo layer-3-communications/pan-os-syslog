@@ -14,6 +14,7 @@ module Sample
   , threat_8_1_H
   , threat_8_1_I
   , threat_9_0_A
+  , threat_9_1_A
   , system_8_1_A
   ) where
 
@@ -241,6 +242,20 @@ threat_9_0_A = pack $ concat
   , "0x2000000000000000,United States,United States,0,,0,,,0,,,,,,,,0,11,"
   , "0,0,0,,firewall1,,,,,0,,0,,N/A,unknown,AppThreat-0-0,0x0,0,4294967295,"
   , ",\"web-advertisements,low-risk\",edd29e10-d927-1753-867f-0108b01b80de,0"
+  ]
+
+-- This is a log from a firewall whose license had expired.
+threat_9_1_A :: Bytes
+threat_9_1_A = pack $ concat
+  [ "<14>Mar  2 11:30:47 MY-PA-5250-3 1,2021/03/02 11:30:47,012911492893,"
+  , "THREAT,url,2305,2021/03/02 11:30:47,192.0.2.22,192.0.2.17,0.0.0.0,"
+  , "0.0.0.0,rule99,foo\\_bar,,ssl,vsys1,MY-trust,MY-dmz,ethernet1/1,"
+  , "ethernet1/2,My-Log-Forwarding,2021/03/02 11:30:47,38578210,1,63421,"
+  , "5986,0,0,0x10b000,tcp,allow,\"192.0.2.17_solarwinds_zero_configuration:5986/\","
+  , "(9999),license-expired,informational,client-to-server,4901795984744840635,"
+  , "0xa000000000000000,10.0.0.0-10.255.255.255,10.0.0.0-10.255.255.255,0,,0,,,0,"
+  , ",,,,,,,0,56,0,0,0,,MY-PA-5250-1,,,,,0,,0,,N/A,unknown,AppThreat-0-0,0x0,0,"
+  , "4196987195,,\"license-expired\",9871ab80-6061-4f07-a06e-0036b0206f73,0,"
   ]
 
 -- System log (IKE delete)

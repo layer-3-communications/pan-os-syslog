@@ -1079,6 +1079,11 @@ parserThreat !syslogHost receiveTime !serialNumber = do
       ruleUuid <- UUID.parserHyphenated ruleUuidField
       Latin.char http2ConnectionField ','
       Latin.skipDigits1 http2ConnectionField
+      -- In PAN-OS 9.1, the last field is the Dynamic User Group Name.
+      -- We just ignore it if it is present.
+      Latin.trySatisfy (== ',') >>= \case
+        True -> Latin.skipWhile (/= ',')
+        False -> pure()
       pure Threat
         { subtype , timeGenerated , sourceAddress , destinationAddress 
         , natSourceIp , natDestinationIp , ruleName , sourceUser 
