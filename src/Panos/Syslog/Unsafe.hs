@@ -766,22 +766,29 @@ parserPrefix = do
       Latin.skipTrailedBy syslogPriorityField '>'
       Latin.skipChar ' '
     False -> pure ()
-  Ascii.skipAlpha1 syslogDatetimeField -- Month
-  Latin.skipChar1 syslogDatetimeField ' '
-  Latin.skipDigits1 syslogDatetimeField -- Day
-  Latin.skipChar1 syslogDatetimeField ' '
-  Latin.skipDigits1 syslogDatetimeField -- Hour
-  Latin.char syslogDatetimeField ':'
-  Latin.skipDigits1 syslogDatetimeField -- Minute
-  Latin.char syslogDatetimeField ':'
-  Latin.skipDigits1 syslogDatetimeField -- Second
-  Latin.skipChar1 syslogDatetimeField ' '
-  hostBounds <- untilSpace syslogHostField
-  Latin.skipChar ' '
-  skipThroughComma futureUseDField
-  !recv <- parserDatetime receiveTimeDateField receiveTimeTimeField
-  !ser <- untilComma serialNumberField
-  pure (hostBounds,recv,ser)
+  Latin.trySatisfy (== '1') >>= \case
+    True -> do
+      _ <- Latin.char futureUseDField ','
+      !recv <- parserDatetime receiveTimeDateField receiveTimeTimeField
+      !ser <- untilComma serialNumberField
+      pure (Bounds 0 0,recv,ser)
+    False -> do
+      Ascii.skipAlpha1 syslogDatetimeField -- Month
+      Latin.skipChar1 syslogDatetimeField ' '
+      Latin.skipDigits1 syslogDatetimeField -- Day
+      Latin.skipChar1 syslogDatetimeField ' '
+      Latin.skipDigits1 syslogDatetimeField -- Hour
+      Latin.char syslogDatetimeField ':'
+      Latin.skipDigits1 syslogDatetimeField -- Minute
+      Latin.char syslogDatetimeField ':'
+      Latin.skipDigits1 syslogDatetimeField -- Second
+      Latin.skipChar1 syslogDatetimeField ' '
+      hostBounds <- untilSpace syslogHostField
+      Latin.skipChar ' '
+      skipThroughComma futureUseDField
+      !recv <- parserDatetime receiveTimeDateField receiveTimeTimeField
+      !ser <- untilComma serialNumberField
+      pure (hostBounds,recv,ser)
 
 -- | Decode a PAN-OS syslog message of an unknown type.
 decode :: Bytes -> Either Field Log
