@@ -31,7 +31,7 @@ import Data.Primitive (ByteArray)
 import Data.Primitive.Addr (Addr(Addr))
 import Data.Word (Word64,Word32,Word16,Word8)
 import GHC.Exts (Ptr(Ptr),Int(I#),Int#,Addr#)
-import Net.Types (IP)
+import Net.Types (IP(IP),IPv6(IPv6))
 import Data.WideWord (Word128)
 
 import qualified Control.Exception
@@ -828,10 +828,19 @@ parserTraffic !syslogHost receiveTime !serialNumber = do
   Latin.char sourceAddressField ','
   destinationAddress <- IP.parserUtf8Bytes destinationAddressField
   Latin.char destinationAddressField ','
-  natSourceIp <- IP.parserUtf8Bytes natSourceIpField
-  Latin.char natSourceIpField ','
-  natDestinationIp <- IP.parserUtf8Bytes natDestinationIpField
-  Latin.char natDestinationIpField ','
+  -- Use the ip address zero when no NAT address is present.
+  natSourceIp <- Latin.trySatisfy (==',') >>= \case
+    True -> pure (IP (IPv6 0))
+    False -> do
+      natSourceIp <- IP.parserUtf8Bytes natSourceIpField
+      Latin.char natSourceIpField ','
+      pure natSourceIp
+  natDestinationIp <- Latin.trySatisfy (==',') >>= \case
+    True -> pure (IP (IPv6 0))
+    False -> do
+      natDestinationIp <- IP.parserUtf8Bytes natDestinationIpField
+      Latin.char natDestinationIpField ','
+      pure natDestinationIp
   ruleName <- untilComma ruleNameField
   sourceUser <- untilComma sourceUserField
   destinationUser <- untilComma destinationUserField
@@ -995,10 +1004,19 @@ parserThreat !syslogHost receiveTime !serialNumber = do
   Latin.char sourceAddressField ','
   destinationAddress <- IP.parserUtf8Bytes destinationAddressField
   Latin.char destinationAddressField ','
-  natSourceIp <- IP.parserUtf8Bytes natSourceIpField
-  Latin.char natSourceIpField ','
-  natDestinationIp <- IP.parserUtf8Bytes natDestinationIpField
-  Latin.char natDestinationIpField ','
+  -- Use the ip address zero when no NAT address is present.
+  natSourceIp <- Latin.trySatisfy (==',') >>= \case
+    True -> pure (IP (IPv6 0))
+    False -> do
+      natSourceIp <- IP.parserUtf8Bytes natSourceIpField
+      Latin.char natSourceIpField ','
+      pure natSourceIp
+  natDestinationIp <- Latin.trySatisfy (==',') >>= \case
+    True -> pure (IP (IPv6 0))
+    False -> do
+      natDestinationIp <- IP.parserUtf8Bytes natDestinationIpField
+      Latin.char natDestinationIpField ','
+      pure natDestinationIp
   ruleName <- untilComma ruleNameField
   sourceUser <- untilComma sourceUserField
   destinationUser <- untilComma destinationUserField
