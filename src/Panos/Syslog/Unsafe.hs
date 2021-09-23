@@ -14,6 +14,7 @@ module Panos.Syslog.Unsafe
   , Traffic(..)
   , Threat(..)
   , System(..)
+  , User(..)
   , Field(..)
   , Bounds(..)
     -- * Decoding
@@ -28,6 +29,7 @@ import Data.Bytes.Types (Bytes(..))
 import Panos.Syslog.Internal.Traffic (Traffic(..),parserTraffic)
 import Panos.Syslog.Internal.Threat (Threat(..),parserThreat)
 import Panos.Syslog.Internal.System (System(..),parserSystem)
+import Panos.Syslog.Internal.User (User(..),parserUser)
 
 import qualified Data.Bytes.Parser as P
 import qualified Data.Bytes.Parser.Ascii as Ascii
@@ -40,8 +42,8 @@ data Log
   = LogTraffic !Traffic
   | LogThreat !Threat
   | LogSystem !System
+  | LogUser !User
   | LogOther
-
 
 untilSpace :: e -> Parser e s Bounds
 {-# inline untilSpace #-}
@@ -113,6 +115,10 @@ parserLog :: Parser Field s Log
 parserLog = do
   (!hostBounds,!receiveTime,!serialNumber) <- parserPrefix
   Latin.any typeField >>= \case
+    'U' -> do
+      Latin.char6 typeField 'S' 'E' 'R' 'I' 'D' ','
+      !x <- parserUser hostBounds receiveTime serialNumber
+      pure (LogUser x)
     'S' -> do
       Latin.char6 typeField 'Y' 'S' 'T' 'E' 'M' ','
       !x <- parserSystem hostBounds receiveTime serialNumber

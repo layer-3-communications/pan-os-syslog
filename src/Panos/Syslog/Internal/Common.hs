@@ -33,6 +33,9 @@ module Panos.Syslog.Internal.Common
   , cloudField
   , contentTypeField
   , contentVersionField
+  , dataSourceField
+  , dataSourceNameField
+  , dataSourceTypeField
   , descriptionField
   , destinationAddressField
   , destinationCountryField
@@ -63,6 +66,7 @@ module Panos.Syslog.Internal.Common
   , httpHeadersField
   , httpMethodField
   , inboundInterfaceField
+  , ipField
   , ipProtocolField
   , leftoversField
   , linkChangeCountField
@@ -103,6 +107,7 @@ module Panos.Syslog.Internal.Common
   , severityField
   , sourceAddressField
   , sourceCountryField
+  , sourceIpField
   , sourcePortField
   , sourceUserField
   , sourceVmUuidField
@@ -118,12 +123,14 @@ module Panos.Syslog.Internal.Common
   , threatIdField
   , timeGeneratedDateField
   , timeGeneratedTimeField
+  , timeoutField
   , tunnelIdField
   , tunnelTypeField
   , typeField
   , urlCategoryListField
   , urlIndexField
   , userAgentField
+  , userField
   , virtualSystemField
   , virtualSystemNameField
   ) where
@@ -644,6 +651,34 @@ eventIdField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
 objectField :: Field
 objectField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
   where !x# = "field:object"#
+
+userField :: Field
+userField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:user"#
+
+dataSourceNameField :: Field
+dataSourceNameField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:datasourcename"#
+
+timeoutField :: Field
+timeoutField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:timeout"#
+
+ipField :: Field
+ipField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:ip"#
+
+dataSourceField :: Field
+dataSourceField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:datasource"#
+
+dataSourceTypeField :: Field
+dataSourceTypeField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:datasourcetype"#
+
+sourceIpField :: Field
+sourceIpField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:source_ip"#
 
 -- TODO: switch to the known-key cstrlen that comes with GHC 
 cstringLen# :: Addr# -> Int#
