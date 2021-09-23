@@ -8,22 +8,31 @@
 
 -- | Fields for system logs.
 module Panos.Syslog.User
-  ( description
+  ( dataSource
+  , dataSourceName
+  , deviceGroupHierarchyLevel1
+  , deviceGroupHierarchyLevel2
+  , deviceGroupHierarchyLevel3
+  , deviceGroupHierarchyLevel4
   , deviceName
-  , eventId
-  , module_
-  , object
+  , sourceIp
+  , repeatCount
   , sequenceNumber
   , serialNumber
-  , severity
   , subtype
+  , syslogHost
   , timeGenerated
+  , user
+  , virtualSystem
+  , virtualSystemName
   ) where
 
+import Chronos (Datetime)
 import Data.Bytes.Types (Bytes(..))
 import Data.Word (Word64)
-import Panos.Syslog.Unsafe (System(System),Bounds(Bounds))
-import Chronos (Datetime)
+import Net.Types (IP)
+import Panos.Syslog.Unsafe (User(User),Bounds(Bounds))
+
 import qualified Panos.Syslog.Unsafe as U
 
 -- | Subtype of the system log; refers to the system daemon
@@ -31,57 +40,82 @@ import qualified Panos.Syslog.Unsafe as U
 -- @dos@, @general@, @global-protect@, @ha@, @hw@, @nat@, @ntpd@,
 -- @pbf@, @port@, @pppoe@, @ras@, @routing@, @satd@, @sslmgr@,
 -- @sslvpn@, @userid@, @url-filtering@, @vpn@.
-subtype :: System -> Bytes
-subtype (System{subtype=Bounds off len,message=msg}) =
+subtype :: User -> Bytes
+subtype (User{subtype=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
 
 -- | The hostname of the firewall on which the session was logged.
-deviceName :: System -> Bytes
-deviceName (System{deviceName=Bounds off len,message=msg}) =
+deviceName :: User -> Bytes
+deviceName (User{deviceName=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
 
--- | Name of the object associated with the system event.
-object :: System -> Bytes
-object (System{object=Bounds off len,message=msg}) =
+-- | Identifies the end user.
+user :: User -> Bytes
+user (User{user=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
 
--- | This field is valid only when the value of the @subtype@
--- field is @general@. It provides additional information about
--- the sub-system generating the log; values are @general@,
--- @management@, @auth@, @ha@, @upgrade@, @chassis@.
-module_ :: System -> Bytes
-module_ (System{module_=Bounds off len,message=msg}) =
+-- | Source from which mapping information is collected.
+dataSource :: User -> Bytes
+dataSource (User{dataSource=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
 
--- | Severity associated with the event; values are @informational@,
--- @low@, @medium@, @high@, @critical@.
-severity :: System -> Bytes
-severity (System{severity=Bounds off len,message=msg}) =
+-- | User-ID source that sends the IP (Port)-User Mapping.
+dataSourceName :: User -> Bytes
+dataSourceName (User{dataSourceName=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
-
--- | String showing the name of the event.
-eventId :: System -> Bytes
-eventId (System{eventId=Bounds off len,message=msg}) =
-  Bytes{offset=off,length=len,array=msg}
-
--- | Detailed description of the event, up to a maximum of 512 bytes.
-description :: System -> Bytes
-description (System{descriptionBounds=Bounds off len,descriptionByteArray=m}) =
-  Bytes{offset=off,length=len,array=m}
 
 -- | Time the log was generated on the dataplane.
-timeGenerated :: System -> Datetime
+timeGenerated :: User -> Datetime
 timeGenerated = U.timeGenerated
 
 -- | A 64-bit log entry identifier incremented sequentially;
 -- each log type has a unique number space.
-sequenceNumber :: System -> Word64
+sequenceNumber :: User -> Word64
 sequenceNumber = U.sequenceNumber
 
 -- | Serial number of the firewall that generated the log. These
 -- occassionally contain non-numeric characters, so do not attempt
 -- to parse this as a decimal number.
-serialNumber :: System -> Bytes
-serialNumber (System{serialNumber=Bounds off len,message=msg}) =
+serialNumber :: User -> Bytes
+serialNumber (User{serialNumber=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
+
+-- | Virtual System associated with the session.
+virtualSystem :: User -> Bytes
+virtualSystem (User{virtualSystem=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+-- | The name of the virtual system associated with the session; only valid
+-- on firewalls enabled for multiple virtual systems.
+virtualSystemName :: User -> Bytes
+virtualSystemName (User{virtualSystemName=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+-- | The hostname from the syslog header appended to the PAN-OS log.
+-- This field is not documented by Palo Alto Network and technically
+-- is not part of the log, but in practice, it is always present.
+-- This is similar to @deviceName@.
+syslogHost :: User -> Bytes
+syslogHost (User{syslogHost=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
+-- | Number of total bytes (transmit and receive) for the session.
+repeatCount :: User -> Word64
+repeatCount = U.repeatCount
+
+deviceGroupHierarchyLevel1 :: User -> Word64
+deviceGroupHierarchyLevel1 = U.deviceGroupHierarchyLevel1
+
+deviceGroupHierarchyLevel2 :: User -> Word64
+deviceGroupHierarchyLevel2 = U.deviceGroupHierarchyLevel2
+
+deviceGroupHierarchyLevel3 :: User -> Word64
+deviceGroupHierarchyLevel3 = U.deviceGroupHierarchyLevel3
+
+deviceGroupHierarchyLevel4 :: User -> Word64
+deviceGroupHierarchyLevel4 = U.deviceGroupHierarchyLevel4
+
+-- | Original session source IP address.
+sourceIp :: User -> IP
+sourceIp = U.sourceIp
 

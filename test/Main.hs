@@ -14,6 +14,7 @@ import Data.Bytes.Types (Bytes(Bytes))
 import qualified Panos.Syslog.Traffic as Traffic
 import qualified Panos.Syslog.Threat as Threat
 import qualified Panos.Syslog.System as System
+import qualified Panos.Syslog.User as User
 import qualified Data.Primitive as PM
 import qualified GHC.Exts as Exts
 import qualified Sample as S
@@ -51,6 +52,8 @@ main = do
   testThreat_9_1_A
   putStrLn "8.1-System-A"
   testSystemA
+  putStrLn "User-A"
+  testUserA
   putStrLn "Finished"
 
 testA :: IO ()
@@ -244,6 +247,17 @@ testSystemA = case decode S.system_8_1_A of
            ) -> fail $
              "wrong description:\nexpected something about IKE\nactually: " ++
              show (System.description t)
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testUserA :: IO ()
+testUserA = case decode S.user_A of
+  Left err -> throwIO err
+  Right (LogUser t) ->
+    if | User.subtype t /= bytes "login" -> fail $
+           "wrong subtype name:\nexpected: login\nactually: " ++
+           show (User.subtype t)
+       | User.user t /= bytes "BIGDAWG10$@EXAMPLE.COM" -> fail "wrong user"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"
 

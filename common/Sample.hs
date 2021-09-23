@@ -16,6 +16,7 @@ module Sample
   , threat_9_0_A
   , threat_9_1_A
   , system_8_1_A
+  , user_A
   ) where
 
 import Data.Bytes (Bytes)
@@ -266,4 +267,13 @@ system_8_1_A = pack $ concat
   , "To-FOO-BAR-NET,0,0,general,informational,\"IKE protocol IPSec SA "
   , "delete message sent to peer. SPI:0xA1CD910F.\",18249042,"
   , "0x8000000000000000,0,0,0,0,,NY-DC-FW-2"
+  ]
+
+-- User ID log (login)
+user_A :: Bytes
+user_A = pack $ concat
+  [ "1,2021/09/19 11:55:38,013201027000,USERID,login,2305,2021/09/19 11:55:38,"
+  , "vsys1,192.0.2.112,BIGDAWG10$@EXAMPLE.COM,server.example.com,0,1,2700,0,0,"
+  , "active-directory,,6991364276409747475,0x0,92,0,0,0,,MY-PA5220-A,1,,"
+  , "2021/09/19 11:55:25,1,0x0,BIGDAWG10$@EXAMPLE.COM"
   ]
