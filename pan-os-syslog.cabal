@@ -48,6 +48,14 @@ library
     Panos.Syslog.Traffic
     Panos.Syslog.Threat
     Panos.Syslog.Unsafe
+  other-modules:
+    -- These were split into separate modules to improve compile times.
+    -- GHC was using 8GB of memory to compile the megamodule that used
+    -- to contain them.
+    Panos.Syslog.Internal.Common
+    Panos.Syslog.Internal.System
+    Panos.Syslog.Internal.Threat
+    Panos.Syslog.Internal.Traffic
   build-depends:
     , base >=4.12.0.0 && <5
     , byteslice >=0.1.3 && <0.3
