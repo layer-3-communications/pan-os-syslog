@@ -4,6 +4,7 @@ module Panos.Syslog
   , U.Traffic
   , U.Threat
   , U.System
+  , U.User
   , U.Field
     -- * Decoding
   , U.decode
