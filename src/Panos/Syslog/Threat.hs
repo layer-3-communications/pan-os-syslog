@@ -22,6 +22,7 @@ module Panos.Syslog.Threat
   , httpHeaders
   , httpMethod
   , inboundInterface
+  , ipProtocol
   , miscellaneous
   , natDestinationIp
   , natDestinationPort
@@ -261,6 +262,12 @@ urlCategoryList :: Threat -> Maybe Bytes
 urlCategoryList (Threat{urlCategoryList=x}) = case Bytes.length x of
   0 -> Nothing
   _ -> Just x
+
+-- | IP protocol associated with the session.
+ipProtocol :: Threat -> Bytes
+ipProtocol (Threat{ipProtocol=Bounds off len,message=msg}) =
+  Bytes{offset=off,length=len,array=msg}
+
 
 -- | Number of total bytes (transmit and receive) for the session.
 repeatCount :: Threat -> Word64
