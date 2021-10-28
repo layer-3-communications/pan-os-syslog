@@ -23,14 +23,16 @@ module Panos.Syslog.Unsafe
 
 import Panos.Syslog.Internal.Common
 
-import Chronos (Datetime)
+import Chronos (Datetime,Offset(Offset),OffsetDatetime(OffsetDatetime))
 import Data.Bytes.Parser (Parser)
 import Data.Bytes.Types (Bytes(..))
+import GHC.Exts (Ptr(Ptr))
 import Panos.Syslog.Internal.Traffic (Traffic(..),parserTraffic)
 import Panos.Syslog.Internal.Threat (Threat(..),parserThreat)
 import Panos.Syslog.Internal.System (System(..),parserSystem)
 import Panos.Syslog.Internal.User (User(..),parserUser)
 
+import qualified Chronos
 import qualified Data.Bytes.Parser as P
 import qualified Data.Bytes.Parser.Ascii as Ascii
 import qualified Data.Bytes.Parser.Latin as Latin
@@ -68,6 +70,12 @@ untilSpace e = do
 -- host name, however, does provide useful information that does
 -- not exist elsewhere in the log. We should be as flexible
 -- as possible with this somewhat fragile part of the log.
+--
+-- Prisma logs add another wrinkle. These begin with:
+--   <14>1 2021-10-27T19:21:00.034Z stream-logfwd20-example logforwarder - panwlogs - 2021-10-27T19:20:59.000000Z,no-serial,...
+-- Notice that the timestamps are now ISO-8601 encoded. The hostname is
+-- in Prisma logs is worthless, but the device_name from the PAN log
+-- inside gives the end user the information they will want.
 parserPrefix :: Parser Field s (Bounds,Datetime,Bounds)
 {-# inline parserPrefix #-}
 parserPrefix = do
@@ -81,10 +89,26 @@ parserPrefix = do
     False -> pure ()
   Latin.trySatisfy (== '1') >>= \case
     True -> do
-      _ <- Latin.char futureUseDField ','
-      !recv <- parserDatetime receiveTimeDateField receiveTimeTimeField
-      !ser <- untilComma serialNumberField
-      pure (Bounds 0 0,recv,ser)
+      Latin.any futureUseDField >>= \case
+        ',' -> do
+          !recv <- parserDatetime receiveTimeDateField receiveTimeTimeField
+          !ser <- untilComma serialNumberField
+          pure (Bounds 0 0,recv,ser)
+        ' ' -> do -- Prisma logs
+          -- TODO: In chronos, add a datetime parser that discards the
+          -- datetime instead of constructing it.
+          _ <- P.orElse Chronos.parserUtf8BytesIso8601 (P.fail syslogDatetimeField)
+          Latin.char syslogDatetimeField ' '
+          hostBounds <- untilSpace syslogHostField
+          P.cstring prismaDataField (Ptr "logforwarder - panwlogs - "# )
+          OffsetDatetime recv (Offset off) <- P.orElse Chronos.parserUtf8BytesIso8601 (P.fail receiveTimeDateField)
+          Latin.char syslogDatetimeField ','
+          case off of
+            0 -> pure ()
+            _ -> P.fail syslogDatetimeField
+          !ser <- untilComma serialNumberField
+          pure (hostBounds,recv,ser)
+        _ -> P.fail futureUseDField
     False -> do
       Ascii.skipAlpha1 syslogDatetimeField -- Month
       Latin.skipChar1 syslogDatetimeField ' '
@@ -103,13 +127,14 @@ parserPrefix = do
       !ser <- untilComma serialNumberField
       pure (hostBounds,recv,ser)
 
--- | Decode a PAN-OS syslog message of an unknown type.
+-- | Decode a PAN-OS syslog message of an unknown type. If there are
+-- leftovers, we still succeed. We do this because every release of PAN-OS
+-- adds a few more fields to the end, and it\'s good to have this library
+-- be able to parse these logs even if it means ignoring the new fields.
 decode :: Bytes -> Either Field Log
 decode b = case P.parseBytes parserLog b of
   P.Failure e -> Left e
-  P.Success (P.Slice _ len r) -> case len of
-    0 -> Right r
-    _ -> Left leftoversField
+  P.Success (P.Slice _ _ r) -> Right r
 
 parserLog :: Parser Field s Log
 parserLog = do

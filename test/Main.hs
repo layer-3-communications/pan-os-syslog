@@ -28,6 +28,8 @@ main = do
   testTrafficB
   putStrLn "9.0-Traffic-A"
   testTraffic_9_0_A
+  putStrLn "Prisma-Traffic-A"
+  testPrismaTrafficA
   putStrLn "8.1-Threat-A"
   testB
   putStrLn "8.1-Threat-B"
@@ -106,6 +108,19 @@ testTraffic_9_0_A = case decode S.traffic_9_0_A of
              show (bytes "my-policy") ++
              "\nactually: " ++
              prettyBytes (Traffic.actionSource t)
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testPrismaTrafficA :: IO ()
+testPrismaTrafficA = case decode S.traffic_prisma_A of
+  Left err -> throwIO err
+  Right (LogTraffic t) ->
+    if | Traffic.deviceName t /= bytes "The-Device-Name" ->
+           fail $
+             "wrong device name:\nexpected: " ++
+             show (bytes "NY-PAN-FW-5") ++
+             "\nactually: " ++
+             show (Traffic.deviceName t)
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"
 

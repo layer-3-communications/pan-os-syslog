@@ -128,17 +128,33 @@ parserTraffic !syslogHost receiveTime !serialNumber = do
   inboundInterface <- untilComma inboundInterfaceField
   outboundInterface <- untilComma outboundInterfaceField
   logAction <- untilComma logActionField
-  skipThroughComma futureUseBField
-  sessionId <- w64Comma sessionIdField
+  -- According to Palo Alto's documentation, the field after log_action
+  -- is a future use field. However, in some (possibly all) PAN-OS 10
+  -- logs, this field is missing. In all other logs, it is a
+  -- YYYY/MM/DD HH:mm:ss timestamp. If the field is exactly 19 bytes long,
+  -- we assume that it is the unused field. Otherwise, we assume that the
+  -- unused field is missing, and we try to interpret these bytes as the
+  -- session_id.
+  futureCursorB <- Unsafe.cursor
+  Bounds _ futureLenB <- untilComma futureUseBField
+  sessionId <- case futureLenB of
+    19 -> w64Comma sessionIdField
+    _ -> do
+      Unsafe.jump futureCursorB
+      w64Comma sessionIdField
   repeatCount <- w64Comma repeatCountField
   sourcePort <- w16Comma sourcePortField
   destinationPort <- w16Comma destinationPortField
   natSourcePort <- w16Comma natSourcePortField
   natDestinationPort <- w16Comma natDestinationPortField
-  -- TODO: handle the flags
-  Latin.char actionFlagsField '0'
-  Latin.char actionFlagsField 'x'
-  _ <- untilComma flagsField
+  -- Note: Flags are ignored. Also, in either PAN-OS 10 or Prisma
+  -- (not sure which one causes this), flags are missing.
+  Latin.trySatisfy (=='0') >>= \case
+    True -> do
+      Latin.char flagsField 'x'
+      _ <- untilComma flagsField
+      pure ()
+    False -> pure ()
   let flags = 0
   ipProtocol <- untilComma ipProtocolField
   action <- untilComma actionField
@@ -149,16 +165,38 @@ parserTraffic !syslogHost receiveTime !serialNumber = do
   startTime <- parserDatetime startTimeDateField startTimeTimeField
   elapsedTime <- w64Comma elapsedTimeField
   category <- untilComma categoryField
-  skipThroughComma futureUseCField
-  sequenceNumber <- w64Comma sequenceNumberField
-  -- TODO: handle action flags
-  Latin.char actionFlagsField '0'
-  Latin.char actionFlagsField 'x'
-  _ <- untilComma actionFlagsField
+  futureCursorC <- Unsafe.cursor
+  Bounds _ futureLenC <- untilComma futureUseCField
+  -- Here, we find another future use fields that is missing in PAN-OS 10.x.
+  -- In older versions, this was always the single digit 0. So, we treat
+  -- length-1 fields as future use.
+  sequenceNumber <- case futureLenC of
+    1 -> w64Comma sequenceNumberField
+    _ -> do
+      Unsafe.jump futureCursorC
+      w64Comma sequenceNumberField
+  -- Note: Action flags are ignored. See note on Flags as well.
+  Latin.trySatisfy (=='0') >>= \case
+    True -> do
+      Latin.char actionFlagsField 'x'
+      _ <- untilComma actionFlagsField
+      pure ()
+    False -> pure ()
   let actionFlags = 0
   sourceCountry <- untilComma sourceCountryField
   destinationCountry <- untilComma destinationCountryField
+  -- Future use field is optional. Here, we hop forward to what is either
+  -- the session_end_reason or the packets_received. We use the first byte
+  -- of this to figure out if the future use field is missing.
+  futureCursorE <- Unsafe.cursor
   skipThroughComma futureUseEField
+  skipThroughComma futureUseEField
+  Latin.any futureUseEField >>= \case
+    c | c >= '0', c <= '9' -> do
+      -- Future use field was present. Skip it.
+      Unsafe.jump futureCursorE
+      skipThroughComma futureUseEField
+    _ -> Unsafe.jump futureCursorE
   packetsSent <- w64Comma packetsSentField
   packetsReceived <- w64Comma packetsReceivedField
   sessionEndReason <- untilComma sessionEndReasonField
@@ -190,12 +228,6 @@ parserTraffic !syslogHost receiveTime !serialNumber = do
       ruleUuid <- UUID.parserHyphenated ruleUuidField
       Latin.char http2ConnectionField ','
       Latin.skipDigits1 http2ConnectionField
-      -- PAN-OS 9.1 adds several more fields (mostly SD-WAN) after the
-      -- http 2 connection field. For the time being, we ignored all of
-      -- these, failing if any are present.
-      P.isEndOfInput >>= \case
-        True -> pure ()
-        False -> P.cstring linkChangeCountField (Ptr ",0,,,,,,,"#)
       pure Traffic
         { subtype , timeGenerated , sourceAddress , destinationAddress 
         , natSourceIp , natDestinationIp , ruleName , sourceUser 

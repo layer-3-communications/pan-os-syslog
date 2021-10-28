@@ -87,6 +87,7 @@ module Panos.Syslog.Internal.Common
   , parentStartTimeField
   , payloadProtocolField
   , pcapIdField
+  , prismaDataField
   , receiveTimeDateField
   , receiveTimeTimeField
   , recipientField
@@ -135,7 +136,7 @@ module Panos.Syslog.Internal.Common
   , virtualSystemNameField
   ) where
 
-import Chronos (DayOfMonth(..),Date(..))
+import Chronos (DayOfMonth(..),Date(..),Offset(..),OffsetDatetime(..))
 import Chronos (Year(..),Month(..),Datetime(..),TimeOfDay(..))
 import Control.Exception (Exception)
 import Control.Monad.ST.Run (runByteArrayST)
@@ -147,6 +148,7 @@ import Data.Primitive.Addr (Addr(Addr))
 import Data.Word (Word64,Word16,Word8)
 import GHC.Exts (Ptr(Ptr),Int(I#),Int#,Addr#)
 
+import qualified Chronos
 import qualified Control.Exception
 import qualified Data.Primitive as PM
 import qualified Data.Primitive.Ptr as PM
@@ -155,36 +157,51 @@ import qualified Data.Bytes.Parser.Unsafe as Unsafe
 import qualified Data.Bytes.Parser.Latin as Latin
 import qualified GHC.Pack
 
+-- In PAN-OS 10, datetimes started being encoded with ISO-8601
+-- rather than with the YYYY/MM/DD HH:mm:ss scheme. So, we
+-- allow either.
 parserDatetime :: e -> e -> Parser e s Datetime
 {-# noinline parserDatetime #-}
 parserDatetime edate etime = do
-  year <- Latin.decWord edate
-  Latin.char edate '/'
-  monthPlusOne <- Latin.decWord edate
-  let month = monthPlusOne - 1
-  if month > 11
-    then P.fail edate
-    else pure ()
-  Latin.char edate '/'
-  day <- Latin.decWord edate
-  Latin.char etime ' '
-  hour <- Latin.decWord etime
-  Latin.char etime ':'
-  minute <- Latin.decWord etime
-  Latin.char etime ':'
-  second <- Latin.decWord etime
-  Latin.char etime ','
-  pure $ Datetime
-    (Date
-      (Year (fromIntegral year))
-      (Month (fromIntegral month))
-      (DayOfMonth (fromIntegral day))
-    )
-    (TimeOfDay
-      (fromIntegral hour)
-      (fromIntegral minute)
-      (1_000_000_000 * fromIntegral second)
-    )
+  _ <- P.take edate 4
+  Latin.any edate >>= \case
+    '-' -> do
+      Unsafe.unconsume 5
+      OffsetDatetime t (Offset f) <- P.orElse Chronos.parserUtf8BytesIso8601 (P.fail edate)
+      Latin.char etime ','
+      case f of
+        0 -> pure t
+        _ -> P.fail edate
+    '/' -> do
+      Unsafe.unconsume 5
+      year <- Latin.decWord edate
+      Latin.char edate '/'
+      monthPlusOne <- Latin.decWord edate
+      let month = monthPlusOne - 1
+      if month > 11
+        then P.fail edate
+        else pure ()
+      Latin.char edate '/'
+      day <- Latin.decWord edate
+      Latin.char etime ' '
+      hour <- Latin.decWord etime
+      Latin.char etime ':'
+      minute <- Latin.decWord etime
+      Latin.char etime ':'
+      second <- Latin.decWord etime
+      Latin.char etime ','
+      pure $ Datetime
+        (Date
+          (Year (fromIntegral year))
+          (Month (fromIntegral month))
+          (DayOfMonth (fromIntegral day))
+        )
+        (TimeOfDay
+          (fromIntegral hour)
+          (fromIntegral minute)
+          (1_000_000_000 * fromIntegral second)
+        )
+    _ -> P.fail edate
 
 -- This does not require that any digits are
 -- actually present.
@@ -247,6 +264,10 @@ syslogHostField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
 syslogDatetimeField :: Field
 syslogDatetimeField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
   where !x# = "syslogDatetime"#
+
+prismaDataField :: Field
+prismaDataField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "prismaData"#
 
 receiveTimeDateField :: Field
 receiveTimeDateField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))

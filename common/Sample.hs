@@ -4,6 +4,7 @@ module Sample
   ( traffic_8_1_A
   , traffic_8_1_B
   , traffic_9_0_A
+  , traffic_prisma_A
   , threat_8_1_A
   , threat_8_1_B
   , threat_8_1_C
@@ -77,6 +78,23 @@ traffic_9_0_A = pack $ concat
   , "1051,709,19,2020/03/09 14:13:24,16,any,0,6412095715,0x0,United States,"
   , "10.0.0.0-10.255.255.255,0,12,7,tcp-fin,11,0,0,0,,NY-PAN-FW-5,"
   , "my-policy,,,0,,0,,N/A,0,0,0,0,321ef4bf-801e-1c89-b341-efb2898ba2be,0"
+  ]
+
+-- This is PAN-OS 10.x.
+traffic_prisma_A :: Bytes
+traffic_prisma_A = pack $ concat
+  [ "<14>1 2021-10-27T19:21:00.034Z stream-logfwd20-548106107-12876850-z5tm-harness-44k2 "
+  , "logforwarder - panwlogs - 2021-10-27T19:20:59.000000Z,no-serial,TRAFFIC,"
+  , "end,10.0,2021-10-27T19:20:40.000000Z,192.0.2.12,192.0.2.18,"
+  , "192.0.2.112,192.0.2.118,INSIDE-TO-OUTSIDE,,,"
+  , "web-browsing,vsys1,Zone-One,Zone-Two,tunnel.101,"
+  , "ethernet1/1,Send-The-Logs,170172,1,42493,80,46254,80,tcp,"
+  , "allow,892,818,74,12,2021-10-27T19:19:08.000000Z,1,low-risk,"
+  , "9091497,10.0.0.0-10.255.255.255,JP,11,1,threat,28,31,0,0,,"
+  , "The-Device-Name,from-policy,,,0,,0,"
+  , "1970-01-01T00:00:00.000000Z,N/A,0,0,0,0,"
+  , "89092ab0-606f-4c5a-b44c-c271420f3972,0,0,,,,,,,,,,,,,,,,,,,"
+  , ",,,,,,,,,,,,,,,,2021-10-27T19:20:41.652000Z,,"
   ]
 
 -- Threat log for web browsing
