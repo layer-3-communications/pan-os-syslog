@@ -16,6 +16,7 @@ module Sample
   , threat_8_1_I
   , threat_9_0_A
   , threat_9_1_A
+  , threat_prisma_A
   , system_8_1_A
   , user_A
   ) where
@@ -261,6 +262,20 @@ threat_9_0_A = pack $ concat
   , "0x2000000000000000,United States,United States,0,,0,,,0,,,,,,,,0,11,"
   , "0,0,0,,firewall1,,,,,0,,0,,N/A,unknown,AppThreat-0-0,0x0,0,4294967295,"
   , ",\"web-advertisements,low-risk\",edd29e10-d927-1753-867f-0108b01b80de,0"
+  ]
+
+threat_prisma_A :: Bytes
+threat_prisma_A = pack $ concat
+  [ "<14>1 2021-10-28T02:58:53.586Z stream-foobar-baz logforwarder - "
+  , "panwlogs - 2021-10-28T02:58:52.000000Z,no-serial,THREAT,url,"
+  , "10.0,2021-10-28T02:58:50.000000Z,192.0.2.99,190.0.2.100,192.0.2.101,"
+  , "192.0.2.102,IN-TO-OUT,,,google-play,vsys1,trust,untrust,tunnel.105,"
+  , "ethernet1/1,The-Forward,28182,1,59580,443,3502,443,tcp,block-url,"
+  , "play.google.com/,shopping,Informational,client to server,2719193,"
+  , "10.0.0.0-10.255.255.255,US,,0,0,,,,28,31,0,0,,big-ol-device,,,"
+  , "unknown,0,,0,1970-01-01T00:00:00.000000Z,N/A,unknown,0,0,,"
+  , "\"shopping,low-risk\",89ea2a40-656e-4c5a-b44c-c27b52de3982,0,"
+  , ",,,,,,,,,,,,,,,,,,,,,,,,,,,2021-10-28T02:58:50.719000Z,"
   ]
 
 -- This is a log from a firewall whose license had expired.
