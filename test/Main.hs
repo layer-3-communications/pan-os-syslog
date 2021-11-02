@@ -54,6 +54,10 @@ main = do
   testThreat_9_1_A
   putStrLn "Prisma-Threat-A"
   testPrismaThreatA
+  putStrLn "Prisma-Threat-B"
+  testPrismaThreatB
+  putStrLn "Prisma-Threat-C"
+  testPrismaThreatC
   putStrLn "8.1-System-A"
   testSystemA
   putStrLn "User-A"
@@ -183,6 +187,29 @@ testPrismaThreatA = case decode S.threat_prisma_A of
     if | Threat.miscellaneous t /= bytes "play.google.com/" -> fail $
            "wrong miscellaneous (URL):\nExpected: " ++
            "play.google.com/\nActually: " ++
+           prettyBytes (Threat.miscellaneous t) ++ "\n"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testPrismaThreatB :: IO ()
+testPrismaThreatB = case decode S.threat_prisma_B of
+  Left err -> throwIO err
+  Right (LogThreat t) ->
+    if | Threat.miscellaneous t /= bytes "example.com" -> fail $
+           "wrong miscellaneous (domain name):\nExpected: " ++
+           "example.com\nActually: " ++
+           prettyBytes (Threat.miscellaneous t) ++ "\n"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testPrismaThreatC :: IO ()
+testPrismaThreatC = case decode S.threat_prisma_C of
+  Left err -> throwIO err
+  Right (LogThreat t) ->
+    if | Threat.subtype t /= bytes "wildfire" -> fail "wrong subtype"
+       | Threat.miscellaneous t /= bytes "Exchange.asmx" -> fail $
+           "wrong miscellaneous:\nExpected: " ++
+           "Exchange.asmx\nActually: " ++
            prettyBytes (Threat.miscellaneous t) ++ "\n"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"

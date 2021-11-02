@@ -17,6 +17,8 @@ module Sample
   , threat_9_0_A
   , threat_9_1_A
   , threat_prisma_A
+  , threat_prisma_B
+  , threat_prisma_C
   , system_8_1_A
   , user_A
   ) where
@@ -277,6 +279,38 @@ threat_prisma_A = pack $ concat
   , "\"shopping,low-risk\",89ea2a40-656e-4c5a-b44c-c27b52de3982,0,"
   , ",,,,,,,,,,,,,,,,,,,,,,,,,,,2021-10-28T02:58:50.719000Z,"
   ]
+
+threat_prisma_B :: Bytes
+threat_prisma_B = pack $ concat
+  [ "<14>1 2021-11-01T15:14:08.069Z stream-logfwd-xyz logforwarder - panwlogs "
+  , "- 2021-11-01T15:14:06.000000Z,no-serial,THREAT,spyware,10.0,"
+  , "2021-11-01T15:13:56.000000Z,192.0.2.20,8.8.8.8,192.0.2.111,8.8.8.8,"
+  , "in-to-out-dns,domain\\exampleuser,,dns,vsys1,ZoneA,ZoneB,tunnel.101,"
+  , "ethernet1/1,My-Forwarding,1355037,1,55517,53,45783,53,udp,drop,"
+  , "example.com,Phishing:example.com(109010001),Low,client-to-server,"
+  , "12088427,10.0.0.0-10.255.255.255,US,1152921504606899096,,,0,,,,,0,"
+  , "28,31,0,0,,Big-Firewall,,,0,,0,1970-01-01T00:00:00.000000Z,N/A,"
+  , "dns-phishing,0,0x0,ceb0229f-7a4a-5c62-8960-f66b27e2e01e,0,"
+  , ",,,,,,,,,,,,,,,,,,,,,,,,,,,,0,2021-11-01T15:13:57.399000Z,"
+  ]
+
+threat_prisma_C :: Bytes
+threat_prisma_C = pack $ concat
+  [ "<14>1 2021-11-02T00:53:49.421Z stream-logfwd-xyz logforwarder - panwlogs "
+  , "- 2021-11-02T00:53:48.000000Z,no-serial,THREAT,wildfire,10.0,"
+  , "2021-11-02T00:53:37.000000Z,192.0.2.20,192.0.2.21,192.0.2.22,192.0.2.23,"
+  , "in-to-out,foo\\bar,,office365-enterprise-access,vsys1,trust,"
+  , "untrust,tunnel.101,ethernet1/1,My-Forwarding,1294093,1,"
+  , "64810,443,32485,443,tcp,allow,Exchange.asmx,"
+  , "Adobe Portable Document Format (PDF)(52021),Informational,"
+  , "server to client,13548583,10.0.0.0-10.255.255.255,US,0,"
+  , "85dde742f22216725f0ff6b172ca68f4f30f02029f08b3079cec34da804db793,"
+  , "wildfire.paloaltonetworks.com,69,pdf,,,,47136308381,28,31,0,0,,"
+  , "Big-Firewall,,,0,,0,1970-01-01T00:00:00.000000Z,"
+  , "N/A,unknown,0,0x0,f0ebabfb-ef45-451a-89a5-30f87238d62b,"
+  , "0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0,2021-11-02T00:53:37.797000Z,"
+  ]
+
 
 -- This is a log from a firewall whose license had expired.
 threat_9_1_A :: Bytes

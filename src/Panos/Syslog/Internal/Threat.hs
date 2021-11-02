@@ -146,6 +146,12 @@ parserThreat !syslogHost receiveTime !serialNumber = do
   let !isWildfire =
         if | Bytes.equalsCString (Ptr "wildfire"# ) subtypeB -> 1 :: Int
            | otherwise -> 0 :: Int
+  let !isUrl =
+        if | Bytes.equalsCString (Ptr "url"# ) subtypeB -> 1 :: Int
+           | otherwise -> 0 :: Int
+  let !isSpyware =
+        if | Bytes.equalsCString (Ptr "spyware"# ) subtypeB -> 1 :: Int
+           | otherwise -> 0 :: Int
   Bounds futureUseAOff futureUseALen <- untilComma futureUseAField
   let !futureUseA = Bytes message futureUseAOff futureUseALen
   let !version =
@@ -214,13 +220,19 @@ parserThreat !syslogHost receiveTime !serialNumber = do
   Bytes{array=miscellaneousByteArray,offset=miscOff,length=miscLen} <-
     parserOptionallyQuoted miscellaneousField
   let miscellaneousBounds = Bounds miscOff miscLen
+  -- Detect presence of threat name and id by looking for trailing
+  -- close paren on field.
   threatIdCursor <- Unsafe.cursor
   Bounds threatIdOff threatIdLen <- untilComma threatIdField
   Unsafe.jump threatIdCursor
   (threatName,threatId) <- case Bytes.isByteSuffixOf 0x29 (Bytes message threatIdOff threatIdLen) of
     True -> parserThreatId
     False -> pure (Bounds threatIdOff 0, 0)
-  category <- untilComma categoryField
+  category <-
+    if | version < 100 || isUrl == 1 -> untilComma categoryField
+       | otherwise -> do
+           off <- Unsafe.cursor
+           pure (Bounds off 0)
   severity <- untilComma severityField
   direction <- untilComma directionField
   sequenceNumber <- w64Comma sequenceNumberField
@@ -237,50 +249,79 @@ parserThreat !syslogHost receiveTime !serialNumber = do
   -- This future use is always zero before PAN-OS 10.x, and in newer versions
   -- it is suppressed entirely. However, the following field is content_type,
   -- which never starts with zero. 
-  Latin.trySatisfy (=='0') >>= \case
-    True -> Latin.char futureUseEField ','
-    False -> pure ()
-  contentType <- untilComma contentTypeField
-  pcapId <- w64Comma pcapIdField
+  if | version >= 100, isUrl == 1 -> pure ()
+     | version >= 100, isSpyware == 1 -> do
+         -- I cannot figure out why, in PAN-OS 10, there is an extra field
+         -- in spyware logs.
+         Latin.skipDigits1 futureUseEField
+         Latin.char2 futureUseEField ',' ','
+     | otherwise -> do
+         Latin.char2 futureUseEField '0' ','
+  -- In PAN-OS 10.x, content_type only shows up in URL logs.
+  -- I've added spyware here as well, but I'm not sure if this
+  -- is correct. Content type definitely does not show up in
+  -- wildfire logs.
+  contentType <-
+    if | version < 100 || isUrl == 1 || isSpyware == 1 -> untilComma contentTypeField
+       | otherwise -> do
+           off <- Unsafe.cursor
+           pure (Bounds off 0)
+  -- Wildfire logs in PAN-OS 10.x do not have a pcap_id field.
+  pcapId <-
+    if | version < 100 || isUrl == 1 || isSpyware == 1 -> w64Comma pcapIdField
+       | otherwise -> pure 0
   -- In PAN-OS 10.x, file_digest and cloud only show up in wildfire logs.
   fileDigest <-
-    if | version < 100 || isWildfire == 1 -> untilComma fileDigestField
+    if | version < 100 || isWildfire == 1 || isSpyware == 1 -> untilComma fileDigestField
        | otherwise -> do
            off <- Unsafe.cursor
            pure (Bounds off 0)
   cloud <-
-    if | version < 100 || isWildfire == 1 -> untilComma cloudField
+    if | version < 100 || isWildfire == 1 || isSpyware == 1 -> untilComma cloudField
        | otherwise -> do
            off <- Unsafe.cursor
            pure (Bounds off 0)
-  urlIndex <- w64Comma urlIndexField
+  urlIndex <-
+    if | version < 100 || isUrl == 1 || isWildfire == 1 -> w64Comma urlIndexField
+       | otherwise -> pure 0
   Bytes{array=userAgentByteArray,offset=uaOff,length=uaLen} <-
-    parserOptionallyQuoted userAgentField
+    if | version < 100 || isUrl == 1 -> parserOptionallyQuoted userAgentField
+       | otherwise -> do
+           off <- Unsafe.cursor
+           pure (Bytes message off 0)
   let userAgentBounds = Bounds uaOff uaLen
   fileType <-
-    if | version < 100 || isWildfire == 1 -> untilComma fileTypeField
+    if | version < 100 || isWildfire == 1 || isSpyware == 1 -> untilComma fileTypeField
        | otherwise -> do
            off <- Unsafe.cursor
            pure (Bounds off 0)
-  forwardedFor <- untilComma forwardedForField
-  referer <- parserOptionallyQuoted refererField
+  forwardedFor <-
+    if | version < 100 || isUrl == 1 -> untilComma forwardedForField
+       | otherwise -> do
+           off <- Unsafe.cursor
+           pure (Bounds off 0)
+  referer <-
+    if | version < 100 || isUrl == 1 -> parserOptionallyQuoted refererField
+       | otherwise -> do
+           off <- Unsafe.cursor
+           pure (Bytes message off 0)
   sender <-
-    if | version < 100 -> parserOptionallyQuoted senderField
+    if | version < 100 || isWildfire == 1 -> parserOptionallyQuoted senderField
        | otherwise -> do
            off <- Unsafe.cursor
            pure (Bytes message off 0)
   subject <-
-    if | version < 100 -> parserOptionallyQuoted subjectField
+    if | version < 100 || isWildfire == 1 -> parserOptionallyQuoted subjectField
        | otherwise -> do
            off <- Unsafe.cursor
            pure (Bytes message off 0)
   recipient <-
-    if | version < 100 -> parserOptionallyQuoted recipientField
+    if | version < 100 || isWildfire == 1 -> parserOptionallyQuoted recipientField
        | otherwise -> do
            off <- Unsafe.cursor
            pure (Bytes message off 0)
   reportId <-
-    if | version < 100 || isWildfire == 1 -> untilComma reportIdField
+    if | version < 100 || isWildfire == 1 || isSpyware == 1 -> untilComma reportIdField
        | otherwise -> do
            off <- Unsafe.cursor
            pure (Bounds off 0)
@@ -294,7 +335,11 @@ parserThreat !syslogHost receiveTime !serialNumber = do
   when (version < 100) (parserOptionallyQuoted_ futureUseFField)
   skipThroughComma sourceVmUuidField
   skipThroughComma destinationVmUuidField
-  httpMethod <- untilComma httpMethodField
+  httpMethod <-
+    if | version < 100 || isUrl == 1 || isSpyware == 1 -> untilComma httpMethodField
+       | otherwise -> do
+           off <- Unsafe.cursor
+           pure (Bounds off 0)
   tunnelId <- w64Comma tunnelIdField
   skipThroughComma monitorTagField
   parentSessionId <- w64Comma parentSessionIdField
@@ -308,15 +353,35 @@ parserThreat !syslogHost receiveTime !serialNumber = do
            pure (Bounds off 0)
   when (version < 100) (skipThroughComma futureUseGField)
   sctpAssociationId <- w64Comma sctpAssociationIdField
-  payloadProtocolId <- w64Comma payloadProtocolField
-  -- TODO: Handle HTTP Headers correctly
-  httpHeaders <- finalOptionallyQuoted httpHeadersField
+  payloadProtocolId <-
+    if | version < 100 -> do
+           w64Comma payloadProtocolField
+       | isUrl == 1 -> do
+           w64Comma payloadProtocolField
+       | isSpyware == 1 || isWildfire == 1 -> do
+           -- In PAN-OS 10.x, this field looks like it is always zero,
+           -- represented in hexadecimal, in spyware logs.
+           Latin.char4 payloadProtocolField '0' 'x' '0' ','
+           pure 0
+       | otherwise -> pure 0
+  -- TODO: Escape or parse HTTP Headers correctly
+  httpHeaders <-
+    if | version < 100 || isUrl == 1 -> do
+           finalOptionallyQuoted httpHeadersField
+       | otherwise -> do
+           off <- Unsafe.cursor
+           pure (Bytes message off 0)
   -- In PAN-OS 8.1, threat logs end after http headers.
   -- PAN-OS 9.0 adds three more fields.
   P.isEndOfInput >>= \case
     False -> do
-      Latin.char urlCategoryListField ','
-      !urlCategoryList <- parserOptionallyQuoted urlCategoryListField
+      !urlCategoryList <-
+        if | version < 100 || isUrl == 1 -> do
+               Latin.char urlCategoryListField ','
+               parserOptionallyQuoted urlCategoryListField
+           | otherwise -> do
+               off <- Unsafe.cursor
+               pure (Bytes message off 0)
       ruleUuid <- UUID.parserHyphenated ruleUuidField
       Latin.char http2ConnectionField ','
       Latin.skipDigits1 http2ConnectionField
