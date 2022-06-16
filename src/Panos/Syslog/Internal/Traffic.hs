@@ -171,6 +171,7 @@ parserTraffic !syslogHost receiveTime !serialNumber = do
   -- In older versions, this was always the single digit 0. So, we treat
   -- length-1 fields as future use.
   sequenceNumber <- case futureLenC of
+    0 -> w64Comma sequenceNumberField
     1 -> w64Comma sequenceNumberField
     _ -> do
       Unsafe.jump futureCursorC

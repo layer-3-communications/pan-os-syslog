@@ -1,7 +1,8 @@
 {-# language TypeApplications #-}
 
 module Sample
-  ( traffic_8_1_A
+  ( correlation_A
+  , traffic_8_1_A
   , traffic_8_1_B
   , traffic_9_0_A
   , traffic_prisma_A
@@ -343,4 +344,13 @@ user_A = pack $ concat
   , "vsys1,192.0.2.112,BIGDAWG10$@EXAMPLE.COM,server.example.com,0,1,2700,0,0,"
   , "active-directory,,6991364276409747475,0x0,92,0,0,0,,MY-PA5220-A,1,,"
   , "2021/09/19 11:55:25,1,0x0,BIGDAWG10$@EXAMPLE.COM"
+  ]
+
+-- Correlation log
+correlation_A :: Bytes
+correlation_A = pack $ concat
+  [ "<14>Mar 7 14:43:42 panorama.example.com 1,2022/03/07 14:43:17,013201019829,"
+  , "CORRELATION,,,2022/03/07 14:43:17,192.0.2.75,,,compromised-host,medium,"
+  , "146,0,0,0,,panorama,1869504768,Beacon Detection,6005,Host visited known "
+  , "malware URL (11 times)."
   ]
