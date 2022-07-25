@@ -52,6 +52,8 @@ main = do
   testThreat_9_0_A
   putStrLn "9.1-Threat-A"
   testThreat_9_1_A
+  putStrLn "9.1-Threat-B"
+  testThreat_9_1_B
   putStrLn "Prisma-Threat-A"
   testPrismaThreatA
   putStrLn "Prisma-Threat-B"
@@ -177,6 +179,24 @@ testThreat_9_1_A = case decode S.threat_9_1_A of
            "wrong miscellaneous (URL):\nExpected: " ++
            "192.0.2.17_solarwinds_zero_configuration:5986/\nActually: " ++
            prettyBytes (Threat.miscellaneous t) ++ "\n"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testThreat_9_1_B :: IO ()
+testThreat_9_1_B = case decode S.threat_9_1_B of
+  Left err -> throwIO err
+  Right (LogThreat t) ->
+    if | Threat.urlCategoryList t /= Just (bytes "social-networking,low-risk") ->
+           fail $
+             "wrong url category list\nExpected:\n"
+             ++
+             "social-networking,low-risk"
+             ++
+             "\nActually:\n"
+             ++
+             maybe "(empty)" prettyBytes (Threat.urlCategoryList t)
+             ++
+             "\n"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"
 

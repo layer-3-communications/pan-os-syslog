@@ -17,6 +17,7 @@ module Sample
   , threat_8_1_I
   , threat_9_0_A
   , threat_9_1_A
+  , threat_9_1_B
   , threat_prisma_A
   , threat_prisma_B
   , threat_prisma_C
@@ -353,4 +354,25 @@ correlation_A = pack $ concat
   , "CORRELATION,,,2022/03/07 14:43:17,192.0.2.75,,,compromised-host,medium,"
   , "146,0,0,0,,panorama,1869504768,Beacon Detection,6005,Host visited known "
   , "malware URL (11 times)."
+  ]
+
+-- Threat log
+threat_9_1_B :: Bytes
+threat_9_1_B = pack $ concat
+  [ "<14>Jul 25 09:39:39 Panorama 1,2022/07/25 09:39:39,012801204178,"
+  , "THREAT,url,2560,2022/07/25 09:40:03,192.0.2.254,192.0.2.201,"
+  , "192.0.2.13,192.0.2.12,trust-to-untrust-allow-any,,,ssl,vsys1,"
+  , "ABC-trust,ABC-untrust,ethernet1/2.14,ethernet1/3,"
+  , "Forward_To_Panorama,2022/07/25 09:40:03,31669,1,53686,443,15492,"
+  , "443,0x403400,tcp,block-url,\"t.co/\",(9999),social-networking,"
+  , "informational,client-to-server,30720475,0xa000000000000000,"
+  , "10.0.0.0-10.255.255.255,United States,,,0,,,0,,,,,,,,0,15,0,0,0,"
+  , ",NYC-ABC-PA-220,,,,,0,,0,,N/A,unknown,AppThreat-0-0,0x0,0,"
+  , "4294967295,,\"social-networking,low-risk\","
+  , "a40f8ec5-109d-4dc5-b09d-33b848f5bd09,0,,0.0.0.0,"
+  , ",,,,,,,,,,,,,,,,,,,,,,,,,,0,2022-07-25T09:40:03.909-04:00,"
+  , ",,,encrypted-tunnel,networking,browser-based,"
+  , "4,\"used-by-malware,able-to-transfer-file,"
+  , "has-known-vulnerability,tunnel-other-application,pervasive-use\","
+  , ",ssl,no,no"
   ]

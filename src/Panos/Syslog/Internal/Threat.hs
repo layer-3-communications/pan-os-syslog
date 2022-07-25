@@ -246,9 +246,9 @@ parserThreat !syslogHost receiveTime !serialNumber = do
   let actionFlags = 0
   sourceCountry <- untilComma sourceCountryField
   destinationCountry <- untilComma destinationCountryField
-  -- This future use is always zero before PAN-OS 10.x, and in newer versions
-  -- it is suppressed entirely. However, the following field is content_type,
-  -- which never starts with zero. 
+  -- This future use is always either zero or empty before PAN-OS 10.x,
+  -- and in newer versions it is suppressed entirely. However, the
+  -- following field is content_type, which never starts with zero. 
   if | version >= 100, isUrl == 1 -> pure ()
      | version >= 100, isSpyware == 1 -> do
          -- I cannot figure out why, in PAN-OS 10, there is an extra field
@@ -256,7 +256,8 @@ parserThreat !syslogHost receiveTime !serialNumber = do
          Latin.skipDigits1 futureUseEField
          Latin.char2 futureUseEField ',' ','
      | otherwise -> do
-         Latin.char2 futureUseEField '0' ','
+         Latin.skipDigits
+         Latin.char futureUseEField ','
   -- In PAN-OS 10.x, content_type only shows up in URL logs.
   -- I've added spyware here as well, but I'm not sure if this
   -- is correct. Content type definitely does not show up in
