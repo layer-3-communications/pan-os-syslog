@@ -1,10 +1,11 @@
 {-# language BangPatterns #-}
+{-# language DerivingStrategies #-}
+{-# language DuplicateRecordFields #-}
+{-# language GeneralizedNewtypeDeriving #-}
 {-# language MagicHash #-}
 {-# language NamedFieldPuns #-}
-{-# language DuplicateRecordFields #-}
 {-# language NumericUnderscores #-}
-{-# language DerivingStrategies #-}
-{-# language GeneralizedNewtypeDeriving #-}
+{-# language OverloadedRecordDot #-}
 
 -- | Fields for traffic logs.
 module Panos.Syslog.Traffic
@@ -167,48 +168,59 @@ packetsSent = U.packetsSent
 
 -- | Source port utilized by the session.
 sourcePort :: Traffic -> Word16
-sourcePort = U.sourcePort
+{-# inline sourcePort #-}
+sourcePort u = u.sourcePort
 
 -- | Time the log was generated on the dataplane.
 timeGenerated :: Traffic -> Datetime
-timeGenerated = U.timeGenerated
+{-# inline timeGenerated #-}
+timeGenerated u = u.timeGenerated
 
 -- | A 64-bit log entry identifier incremented sequentially;
 -- each log type has a unique number space.
 sequenceNumber :: Traffic -> Word64
-sequenceNumber = U.sequenceNumber
+{-# inline sequenceNumber #-}
+sequenceNumber u = u.sequenceNumber
 
 -- | Post-NAT source port.
 natSourcePort :: Traffic -> Word16
-natSourcePort = U.natSourcePort
+{-# inline natSourcePort #-}
+natSourcePort u = u.natSourcePort
 
 -- | The UUID that permanently identifies the rule.
 ruleUuid :: Traffic -> Word128
-ruleUuid = U.ruleUuid
+{-# inline ruleUuid #-}
+ruleUuid u = u.ruleUuid
 
 -- | Destination port utilized by the session.
 destinationPort :: Traffic -> Word16
-destinationPort = U.destinationPort
+{-# inline destinationPort #-}
+destinationPort u = u.destinationPort
 
 -- | Post-NAT destination port.
 natDestinationPort :: Traffic -> Word16
-natDestinationPort = U.natDestinationPort
+{-# inline natDestinationPort #-}
+natDestinationPort u = u.natDestinationPort
 
 -- | If Source NAT performed, the post-NAT Source IP address.
 natSourceIp :: Traffic -> IP
-natSourceIp = U.natSourceIp
+{-# inline natSourceIp #-}
+natSourceIp u = u.natSourceIp
 
 -- | If Destination NAT performed, the post-NAT Destination IP address.
 natDestinationIp :: Traffic -> IP
-natDestinationIp = U.natDestinationIp
+{-# inline natDestinationIp #-}
+natDestinationIp u = u.natDestinationIp
 
 -- | Original session source IP address.
 sourceAddress :: Traffic -> IP
-sourceAddress = U.sourceAddress
+{-# inline sourceAddress #-}
+sourceAddress u = u.sourceAddress
 
 -- | Original session destination IP address.
 destinationAddress :: Traffic -> IP
-destinationAddress = U.destinationAddress
+{-# inline destinationAddress #-}
+destinationAddress u = u.destinationAddress
 
 -- | Number of total packets (transmit and receive) for the session.
 packets :: Traffic -> Word64
@@ -228,7 +240,8 @@ bytes = U.bytes
 
 -- | Number of total bytes (transmit and receive) for the session.
 repeatCount :: Traffic -> Word64
-repeatCount = U.repeatCount
+{-# inline repeatCount #-}
+repeatCount u = u.repeatCount
 
 -- | Serial number of the firewall that generated the log. These
 -- occassionally contain non-numeric characters, so do not attempt
@@ -238,16 +251,20 @@ serialNumber (Traffic{serialNumber=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
 
 deviceGroupHierarchyLevel1 :: Traffic -> Word64
-deviceGroupHierarchyLevel1 = U.deviceGroupHierarchyLevel1
+{-# inline deviceGroupHierarchyLevel1 #-}
+deviceGroupHierarchyLevel1 u = u.deviceGroupHierarchyLevel1
 
 deviceGroupHierarchyLevel2 :: Traffic -> Word64
-deviceGroupHierarchyLevel2 = U.deviceGroupHierarchyLevel2
+{-# inline deviceGroupHierarchyLevel2 #-}
+deviceGroupHierarchyLevel2 u = u.deviceGroupHierarchyLevel2
 
 deviceGroupHierarchyLevel3 :: Traffic -> Word64
-deviceGroupHierarchyLevel3 = U.deviceGroupHierarchyLevel3
+{-# inline deviceGroupHierarchyLevel3 #-}
+deviceGroupHierarchyLevel3 u = u.deviceGroupHierarchyLevel3
 
 deviceGroupHierarchyLevel4 :: Traffic -> Word64
-deviceGroupHierarchyLevel4 = U.deviceGroupHierarchyLevel4
+{-# inline deviceGroupHierarchyLevel4 #-}
+deviceGroupHierarchyLevel4 u = u.deviceGroupHierarchyLevel4
 
 -- | The reason a session terminated.
 sessionEndReason :: Traffic -> Bytes
@@ -289,4 +306,5 @@ destinationCountry (Traffic{destinationCountry=Bounds off len,message=msg}) =
 
 -- | An internal numerical identifier applied to each session.
 sessionId :: Traffic -> Word64
-sessionId = U.sessionId
+{-# inline sessionId #-}
+sessionId u = u.sessionId

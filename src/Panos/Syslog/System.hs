@@ -1,10 +1,11 @@
 {-# language BangPatterns #-}
+{-# language DerivingStrategies #-}
+{-# language DuplicateRecordFields #-}
+{-# language GeneralizedNewtypeDeriving #-}
 {-# language MagicHash #-}
 {-# language NamedFieldPuns #-}
-{-# language DuplicateRecordFields #-}
 {-# language NumericUnderscores #-}
-{-# language DerivingStrategies #-}
-{-# language GeneralizedNewtypeDeriving #-}
+{-# language OverloadedRecordDot #-}
 
 -- | Fields for system logs.
 module Panos.Syslog.System
@@ -71,12 +72,14 @@ description (System{descriptionBounds=Bounds off len,descriptionByteArray=m}) =
 
 -- | Time the log was generated on the dataplane.
 timeGenerated :: System -> Datetime
-timeGenerated = U.timeGenerated
+{-# inline timeGenerated #-}
+timeGenerated u = u.timeGenerated
 
 -- | A 64-bit log entry identifier incremented sequentially;
 -- each log type has a unique number space.
 sequenceNumber :: System -> Word64
-sequenceNumber = U.sequenceNumber
+{-# inline sequenceNumber #-}
+sequenceNumber u = u.sequenceNumber
 
 -- | Serial number of the firewall that generated the log. These
 -- occassionally contain non-numeric characters, so do not attempt
@@ -84,4 +87,3 @@ sequenceNumber = U.sequenceNumber
 serialNumber :: System -> Bytes
 serialNumber (System{serialNumber=Bounds off len,message=msg}) =
   Bytes{offset=off,length=len,array=msg}
-

@@ -1,10 +1,11 @@
 {-# language BangPatterns #-}
+{-# language DerivingStrategies #-}
+{-# language DuplicateRecordFields #-}
+{-# language GeneralizedNewtypeDeriving #-}
 {-# language MagicHash #-}
 {-# language NamedFieldPuns #-}
-{-# language DuplicateRecordFields #-}
 {-# language NumericUnderscores #-}
-{-# language DerivingStrategies #-}
-{-# language GeneralizedNewtypeDeriving #-}
+{-# language OverloadedRecordDot #-}
 
 -- | Fields for threat logs.
 module Panos.Syslog.Threat
@@ -128,7 +129,8 @@ threatId = U.threatId
 
 -- | Time the log was generated on the dataplane.
 timeGenerated :: Threat -> Datetime
-timeGenerated = U.timeGenerated
+{-# inline timeGenerated #-}
+timeGenerated u = u.timeGenerated
 
 -- | For URL Subtype, it is the URL Category; For WildFire subtype,
 -- it is the verdict on the file and is either @malicious@, @grayware@,
@@ -162,7 +164,8 @@ miscellaneous (Threat{miscellaneousBounds=Bounds off len,miscellaneousByteArray=
 -- type has a unique number space. This field is not supported on
 -- PA-7000 Series firewalls.
 sequenceNumber :: Threat -> Word64
-sequenceNumber = U.sequenceNumber
+{-# inline sequenceNumber #-}
+sequenceNumber u = u.sequenceNumber
 
 -- | Serial number of the firewall that generated the log. These
 -- occassionally contain non-numeric characters, so do not attempt
@@ -203,19 +206,23 @@ ruleName (Threat{ruleName=Bounds off len,message=msg}) =
 
 -- | Original session destination IP address.
 destinationAddress :: Threat -> IP
-destinationAddress = U.destinationAddress
+{-# inline destinationAddress #-}
+destinationAddress u = u.destinationAddress
 
 -- | Original session source IP address.
 sourceAddress :: Threat -> IP
-sourceAddress = U.sourceAddress
+{-# inline sourceAddress #-}
+sourceAddress u = u.sourceAddress
 
 -- | Source port utilized by the session.
 sourcePort :: Threat -> Word16
-sourcePort = U.sourcePort
+{-# inline sourcePort #-}
+sourcePort u = u.sourcePort
 
 -- | Destination port utilized by the session.
 destinationPort :: Threat -> Word16
-destinationPort = U.destinationPort
+{-# inline destinationPort #-}
+destinationPort u = u.destinationPort
 
 sender :: Threat -> Bytes
 sender = U.sender
@@ -228,19 +235,23 @@ recipient = U.recipient
 
 -- | Post-NAT destination port.
 natDestinationPort :: Threat -> Word16
-natDestinationPort = U.natDestinationPort
+{-# inline natDestinationPort #-}
+natDestinationPort u = u.natDestinationPort
 
 -- | If Source NAT performed, the post-NAT Source IP address.
 natSourceIp :: Threat -> IP
-natSourceIp = U.natSourceIp
+{-# inline natSourceIp #-}
+natSourceIp u = u.natSourceIp
 
 -- | If Destination NAT performed, the post-NAT Destination IP address.
 natDestinationIp :: Threat -> IP
-natDestinationIp = U.natDestinationIp
+{-# inline natDestinationIp #-}
+natDestinationIp u = u.natDestinationIp
 
 -- | Post-NAT source port.
 natSourcePort :: Threat -> Word16
-natSourcePort = U.natSourcePort
+{-# inline natSourcePort #-}
+natSourcePort u = u.natSourcePort
 
 -- | Source country or Internal region for private addresses;
 -- maximum length is 32 bytes.
@@ -271,8 +282,10 @@ ipProtocol (Threat{ipProtocol=Bounds off len,message=msg}) =
 
 -- | Number of total bytes (transmit and receive) for the session.
 repeatCount :: Threat -> Word64
-repeatCount = U.repeatCount
+{-# inline repeatCount #-}
+repeatCount u = u.repeatCount
 
 -- | An internal numerical identifier applied to each session.
 sessionId :: Threat -> Word64
-sessionId = U.sessionId
+{-# inline sessionId #-}
+sessionId u = u.sessionId

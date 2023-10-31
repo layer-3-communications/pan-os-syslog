@@ -5,6 +5,7 @@
 {-# language NumericUnderscores #-}
 {-# language DerivingStrategies #-}
 {-# language GeneralizedNewtypeDeriving #-}
+{-# language OverloadedRecordDot #-}
 
 -- | Fields for system logs.
 module Panos.Syslog.User
@@ -66,12 +67,14 @@ dataSourceName (User{dataSourceName=Bounds off len,message=msg}) =
 
 -- | Time the log was generated on the dataplane.
 timeGenerated :: User -> Datetime
-timeGenerated = U.timeGenerated
+{-# inline timeGenerated #-}
+timeGenerated u = u.timeGenerated
 
 -- | A 64-bit log entry identifier incremented sequentially;
 -- each log type has a unique number space.
 sequenceNumber :: User -> Word64
-sequenceNumber = U.sequenceNumber
+{-# inline sequenceNumber #-}
+sequenceNumber u = u.sequenceNumber
 
 -- | Serial number of the firewall that generated the log. These
 -- occassionally contain non-numeric characters, so do not attempt
@@ -101,19 +104,24 @@ syslogHost (User{syslogHost=Bounds off len,message=msg}) =
 
 -- | Number of total bytes (transmit and receive) for the session.
 repeatCount :: User -> Word64
-repeatCount = U.repeatCount
+{-# inline repeatCount #-}
+repeatCount u = u.repeatCount
 
 deviceGroupHierarchyLevel1 :: User -> Word64
-deviceGroupHierarchyLevel1 = U.deviceGroupHierarchyLevel1
+{-# inline deviceGroupHierarchyLevel1 #-}
+deviceGroupHierarchyLevel1 u = u.deviceGroupHierarchyLevel1
 
 deviceGroupHierarchyLevel2 :: User -> Word64
-deviceGroupHierarchyLevel2 = U.deviceGroupHierarchyLevel2
+{-# inline deviceGroupHierarchyLevel2 #-}
+deviceGroupHierarchyLevel2 u = u.deviceGroupHierarchyLevel2
 
 deviceGroupHierarchyLevel3 :: User -> Word64
-deviceGroupHierarchyLevel3 = U.deviceGroupHierarchyLevel3
+{-# inline deviceGroupHierarchyLevel3 #-}
+deviceGroupHierarchyLevel3 u = u.deviceGroupHierarchyLevel3
 
 deviceGroupHierarchyLevel4 :: User -> Word64
-deviceGroupHierarchyLevel4 = U.deviceGroupHierarchyLevel4
+{-# inline deviceGroupHierarchyLevel4 #-}
+deviceGroupHierarchyLevel4 u = u.deviceGroupHierarchyLevel4
 
 -- | Original session source IP address.
 sourceIp :: User -> IP
