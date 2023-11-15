@@ -51,6 +51,7 @@ module Panos.Syslog.Internal.Common
   , directionField
   , elapsedTimeField
   , eventIdField
+  , evidenceField
   , fileDigestField
   , fileTypeField
   , flagsField
@@ -79,6 +80,8 @@ module Panos.Syslog.Internal.Common
   , natSourceIpField
   , natSourcePortField
   , objectField
+  , objectIdField
+  , objectNameField
   , outboundInterfaceField
   , packetsField
   , packetsReceivedField
@@ -133,6 +136,7 @@ module Panos.Syslog.Internal.Common
   , userAgentField
   , userField
   , virtualSystemField
+  , virtualSystemIdField
   , virtualSystemNameField
   ) where
 
@@ -700,6 +704,22 @@ dataSourceTypeField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
 sourceIpField :: Field
 sourceIpField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
   where !x# = "field:source_ip"#
+
+evidenceField :: Field
+evidenceField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:evidence"#
+
+objectIdField :: Field
+objectIdField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:objectid"#
+
+objectNameField :: Field
+objectNameField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:objectname"#
+
+virtualSystemIdField :: Field
+virtualSystemIdField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:virtualsystemid"#
 
 -- TODO: switch to the known-key cstrlen that comes with GHC 
 cstringLen# :: Addr# -> Int#

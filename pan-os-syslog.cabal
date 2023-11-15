@@ -44,16 +44,18 @@ extra-source-files: CHANGELOG.md
 library
   exposed-modules:
     Panos.Syslog
+    Panos.Syslog.Correlation
     Panos.Syslog.System
-    Panos.Syslog.Traffic
     Panos.Syslog.Threat
-    Panos.Syslog.User
+    Panos.Syslog.Traffic
     Panos.Syslog.Unsafe
+    Panos.Syslog.User
   other-modules:
     -- These were split into separate modules to improve compile times.
     -- GHC was using 8GB of memory to compile the megamodule that used
     -- to contain them.
     Panos.Syslog.Internal.Common
+    Panos.Syslog.Internal.Correlation
     Panos.Syslog.Internal.System
     Panos.Syslog.Internal.Threat
     Panos.Syslog.Internal.Traffic

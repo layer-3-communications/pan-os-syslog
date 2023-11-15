@@ -7,7 +7,7 @@
 {-# language GeneralizedNewtypeDeriving #-}
 {-# language OverloadedRecordDot #-}
 
--- | Fields for system logs.
+-- | Fields for user logs.
 module Panos.Syslog.User
   ( dataSource
   , dataSourceName

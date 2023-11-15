@@ -11,12 +11,13 @@ import Data.Word (Word8)
 import Data.Char (ord,chr)
 import Data.Bytes.Types (Bytes(Bytes))
 
-import qualified Panos.Syslog.Traffic as Traffic
-import qualified Panos.Syslog.Threat as Threat
-import qualified Panos.Syslog.System as System
-import qualified Panos.Syslog.User as User
 import qualified Data.Primitive as PM
 import qualified GHC.Exts as Exts
+import qualified Panos.Syslog.Correlation as Correlation
+import qualified Panos.Syslog.System as System
+import qualified Panos.Syslog.Threat as Threat
+import qualified Panos.Syslog.Traffic as Traffic
+import qualified Panos.Syslog.User as User
 import qualified Sample as S
 
 main :: IO ()
@@ -64,6 +65,8 @@ main = do
   testSystemA
   putStrLn "User-A"
   testUserA
+  putStrLn "Correlation-A"
+  testCorrelationA
   putStrLn "Finished"
 
 testA :: IO ()
@@ -336,6 +339,13 @@ testUserA = case decode S.user_A of
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"
 
+testCorrelationA :: IO ()
+testCorrelationA = case decode S.correlation_A of
+  Left err -> throwIO err
+  Right (LogCorrelation t) ->
+    if | Correlation.objectId t /= 6005 -> fail "wrong object id"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
 
 bytes :: String -> Bytes
 bytes s = let b = pack s in Bytes b 0 (PM.sizeofByteArray b)
