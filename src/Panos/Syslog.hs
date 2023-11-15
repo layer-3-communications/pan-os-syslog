@@ -5,6 +5,7 @@ module Panos.Syslog
   , U.Threat
   , U.System
   , U.User
+  , U.Correlation
   , U.Field
     -- * Decoding
   , U.decode
