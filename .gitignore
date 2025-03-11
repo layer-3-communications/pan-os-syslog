@@ -27,3 +27,4 @@ stack.yaml
 test_results/**
 scripts/validate
 scripts/run
+output/
