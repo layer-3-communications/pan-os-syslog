@@ -1,6 +1,6 @@
 cabal-version: 2.2
 name: pan-os-syslog
-version: 0.1.0.0
+version: 0.2.0.0
 synopsis: Parse syslog traffic from PAN-OS
 description:
   Parse syslog traffic from PAN-OS. The data types in this library are
