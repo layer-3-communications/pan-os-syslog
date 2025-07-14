@@ -60,11 +60,13 @@ module Panos.Syslog.Traffic
 
 import Chronos (Datetime)
 import Data.Bytes.Types (Bytes(..))
-import Panos.Syslog.Unsafe (Traffic(Traffic),Bounds(Bounds))
+import Data.WideWord (Word128)
 import Data.Word (Word64,Word16)
 import Net.Types (IP)
-import Data.WideWord (Word128)
-import qualified Panos.Syslog.Unsafe as U
+import Panos.Syslog.Internal.Common (Bounds(Bounds))
+import Panos.Syslog.Internal.Traffic (Traffic(Traffic))
+
+import qualified Panos.Syslog.Internal.Traffic as U
 
 -- | IP protocol associated with the session.
 ipProtocol :: Traffic -> Bytes

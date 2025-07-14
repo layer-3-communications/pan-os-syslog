@@ -21,11 +21,13 @@ module Panos.Syslog.System
   , timeGenerated
   ) where
 
+import Chronos (Datetime)
 import Data.Bytes.Types (Bytes(..))
 import Data.Word (Word64)
-import Panos.Syslog.Unsafe (System(System),Bounds(Bounds))
-import Chronos (Datetime)
-import qualified Panos.Syslog.Unsafe as U
+import Panos.Syslog.Internal.Common (Bounds(Bounds))
+import Panos.Syslog.Internal.System (System(System))
+
+import qualified Panos.Syslog.Internal.System as U
 
 -- | Subtype of the system log; refers to the system daemon
 -- generating the log; values are @crypto@, @dhcp@, @dnsproxy@,

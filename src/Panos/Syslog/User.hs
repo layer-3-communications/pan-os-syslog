@@ -32,9 +32,10 @@ import Chronos (Datetime)
 import Data.Bytes.Types (Bytes(..))
 import Data.Word (Word64)
 import Net.Types (IP)
-import Panos.Syslog.Unsafe (User(User),Bounds(Bounds))
+import Panos.Syslog.Internal.User (User(User))
+import Panos.Syslog.Internal.Common (Bounds(Bounds))
 
-import qualified Panos.Syslog.Unsafe as U
+import qualified Panos.Syslog.Internal.User as U
 
 -- | Subtype of the system log; refers to the system daemon
 -- generating the log; values are @crypto@, @dhcp@, @dnsproxy@,

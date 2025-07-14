@@ -30,9 +30,10 @@ import Chronos (Datetime)
 import Data.Bytes.Types (Bytes(..))
 import Data.Word (Word64)
 import Net.Types (IP)
-import Panos.Syslog.Unsafe (Correlation(Correlation),Bounds(Bounds))
+import Panos.Syslog.Internal.Common (Bounds(Bounds))
+import Panos.Syslog.Internal.Correlation (Correlation(Correlation))
 
-import qualified Panos.Syslog.Unsafe as U
+import qualified Panos.Syslog.Internal.Correlation
 
 -- | The hostname of the firewall on which the session was logged.
 deviceName :: Correlation -> Bytes

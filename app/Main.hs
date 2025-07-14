@@ -46,7 +46,6 @@ import qualified Data.Primitive as PM
 import qualified Data.Primitive.Contiguous as Contiguous
 import qualified Data.Map.Strict as Map
 import qualified Panos.Syslog.Traffic as Traffic
-import qualified Data.Primitive.Ptr as PM
 import qualified Data.Bytes.Text.Ascii as Ascii
 import qualified Data.ByteString as ByteString
 import qualified Data.Bytes as Bytes

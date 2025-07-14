@@ -48,7 +48,6 @@ library
     Panos.Syslog.System
     Panos.Syslog.Threat
     Panos.Syslog.Traffic
-    Panos.Syslog.Unsafe
     Panos.Syslog.User
   other-modules:
     -- These were split into separate modules to improve compile times.

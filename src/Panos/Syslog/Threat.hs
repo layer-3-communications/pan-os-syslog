@@ -55,12 +55,14 @@ module Panos.Syslog.Threat
   ) where
 
 import Data.Bytes.Types (Bytes(..))
-import Panos.Syslog.Unsafe (Threat(Threat),Bounds(Bounds))
+import Panos.Syslog.Internal.Common (Bounds(Bounds))
+import Panos.Syslog.Internal.Threat (Threat(Threat))
 import Data.Word (Word64,Word16)
 import Chronos (Datetime)
 import Net.Types (IP)
+
 import qualified Data.Bytes as Bytes
-import qualified Panos.Syslog.Unsafe as U
+import qualified Panos.Syslog.Internal.Threat as U
 
 -- | Subtype of threat log. Values include: @data@, @file@, @flood@,
 -- @packet@, @scan@, @spyware@, @url@, @virus@, @vulnerability@,
