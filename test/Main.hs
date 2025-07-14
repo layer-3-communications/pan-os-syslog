@@ -31,6 +31,8 @@ main = do
   testTraffic_9_0_A
   putStrLn "Prisma-Traffic-A"
   testPrismaTrafficA
+  putStrLn "Ietf-Traffic-A"
+  testIetfTrafficA
   putStrLn "8.1-Threat-A"
   testB
   putStrLn "8.1-Threat-B"
@@ -134,6 +136,11 @@ testPrismaTrafficA = case decode S.traffic_prisma_A of
              show (Traffic.deviceName t)
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"
+
+testIetfTrafficA :: IO ()
+testIetfTrafficA = case decode S.traffic_ietf_A of
+  Left err -> throwIO err
+  Right _ -> pure ()
 
 testTrafficB :: IO ()
 testTrafficB = case decode S.traffic_8_1_B of

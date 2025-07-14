@@ -6,6 +6,7 @@ module Sample
   , traffic_8_1_B
   , traffic_9_0_A
   , traffic_prisma_A
+  , traffic_ietf_A
   , threat_8_1_A
   , threat_8_1_B
   , threat_8_1_C
@@ -100,6 +101,21 @@ traffic_prisma_A = pack $ concat
   , "1970-01-01T00:00:00.000000Z,N/A,0,0,0,0,"
   , "89092ab0-606f-4c5a-b44c-c271420f3972,0,0,,,,,,,,,,,,,,,,,,,"
   , ",,,,,,,,,,,,,,,,2021-10-27T19:20:41.652000Z,,"
+  ]
+
+traffic_ietf_A :: Bytes
+traffic_ietf_A = pack $ concat
+  [ "<14>1 2025-07-14T09:50:36-04:00 the-hostname - - - -  1,2025/07/14 09:50:35,"
+  , "025896414892,TRAFFIC,end,2562,2025/07/14 09:50:35,192.0.2.125,192.0.2.196,"
+  , "192.0.2.66,192.0.2.2,Dev-Trust,,,ping,vsys1,Dev-Trust,Dev-Trust,ethernet1/4.13,"
+  , "ethernet1/6,Global-Forward-Logs,2025/07/14 09:50:35,227554,1,0,0,0,0,0x500019,"
+  , "icmp,allow,64,64,0,1,2025/07/14 09:50:25,0,any,,7470815214340870367,"
+  , "0x8000000000000000,10.0.0.0-10.255.255.255,10.0.0.0-10.255.255.255,,1,0,"
+  , "aged-out,241,173,0,0,,foo-bar,from-policy,,,0,,0,,N/A,0,0,0,0,"
+  , "c7dc0e27-4795-4930-8ef8-541919a6ebcd,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"
+  , "2025-07-14T09:50:36.624-04:00,,,internet-utility,general-internet,"
+  , "network-protocol,2,\"has-known-vulnerability,tunnel-other-application,pervasive-use\","
+  , "untunneled,no,no,0"
   ]
 
 -- Threat log for web browsing

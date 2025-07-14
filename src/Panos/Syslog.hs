@@ -32,7 +32,6 @@ import Control.Monad ((<$!>))
 import Chronos (Datetime,Offset(Offset),OffsetDatetime(OffsetDatetime))
 import Data.Bytes.Parser (Parser)
 import Data.Bytes.Types (Bytes(..))
-import GHC.Exts (Ptr(Ptr))
 import Panos.Syslog.Internal.Traffic (Traffic(..),parserTraffic)
 import Panos.Syslog.Internal.Threat (Threat(..),parserThreat)
 import Panos.Syslog.Internal.System (System(..),parserSystem)
@@ -115,14 +114,25 @@ parserPrefix = do
           _ <- P.orElse Chronos.parserUtf8BytesIso8601 (P.fail syslogDatetimeField)
           Latin.char syslogDatetimeField ' '
           hostBounds <- untilSpace syslogHostField
-          P.cstring prismaDataField (Ptr "logforwarder - panwlogs - "# )
-          OffsetDatetime recv (Offset off) <- P.orElse Chronos.parserUtf8BytesIso8601 (P.fail receiveTimeDateField)
-          Latin.char syslogDatetimeField ','
-          case off of
-            0 -> pure ()
-            _ -> P.fail syslogDatetimeField
-          !ser <- untilComma serialNumberField
-          pure (hostBounds,recv,ser)
+          skipIetfHeaderFieldThroughSpace
+          skipIetfHeaderFieldThroughSpace
+          skipIetfHeaderFieldThroughSpace
+          skipIetfHeaderFieldThroughSpace
+          Latin.skipWhile (==' ')
+          Latin.trySatisfy (== '1') >>= \case
+            True -> do
+              Latin.char futureUseDField ','
+              !recv <- parserDatetime receiveTimeDateField receiveTimeTimeField
+              !ser <- untilComma serialNumberField
+              pure (hostBounds,recv,ser)
+            False -> do
+              OffsetDatetime recv (Offset off) <- P.orElse Chronos.parserUtf8BytesIso8601 (P.fail receiveTimeDateField)
+              Latin.char syslogDatetimeField ','
+              case off of
+                0 -> pure ()
+                _ -> P.fail syslogDatetimeField
+              !ser <- untilComma serialNumberField
+              pure (hostBounds,recv,ser)
         _ -> P.fail futureUseDField
     False -> do
       Ascii.skipAlpha1 syslogDatetimeField -- Month
@@ -141,6 +151,9 @@ parserPrefix = do
       !recv <- parserDatetime receiveTimeDateField receiveTimeTimeField
       !ser <- untilComma serialNumberField
       pure (hostBounds,recv,ser)
+
+skipIetfHeaderFieldThroughSpace :: Parser Field s ()
+skipIetfHeaderFieldThroughSpace = Latin.skipTrailedBy prismaDataField ' '
 
 -- | Decode a PAN-OS syslog message of an unknown type. If there are
 -- leftovers, we still succeed. We do this because every release of PAN-OS
