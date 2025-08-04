@@ -18,6 +18,7 @@ module Panos.Syslog
   , System(..)
   , User(..)
   , Correlation(..)
+  , GlobalProtect(..)
     -- * Misc Types
   , Field(..)
   , Bounds(..)
