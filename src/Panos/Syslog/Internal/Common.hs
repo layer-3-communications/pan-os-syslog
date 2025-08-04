@@ -12,6 +12,7 @@ module Panos.Syslog.Internal.Common
     untilComma
   , skipDigitsThroughComma
   , skipThroughComma
+  , skipIp
   , w64Comma
   , w16Comma
   , parserDatetime
@@ -63,6 +64,15 @@ module Panos.Syslog.Internal.Common
   , futureUseEField
   , futureUseFField
   , futureUseGField
+  , futureUseHField
+  , futureUseIField
+  , futureUseJField
+  , futureUseKField
+  , futureUseLField
+  , futureUseMField
+  , futureUseNField
+  , futureUseOField
+  , futureUsePField
   , http2ConnectionField
   , httpHeadersField
   , httpMethodField
@@ -138,6 +148,11 @@ module Panos.Syslog.Internal.Common
   , virtualSystemField
   , virtualSystemIdField
   , virtualSystemNameField
+  , publicIpField
+  , machineNameField
+  , statusField
+  , authenticationMethodField
+  , stageField
   ) where
 
 import Chronos (DayOfMonth(..),Date(..),Offset(..),OffsetDatetime(..))
@@ -217,6 +232,16 @@ skipDigitsThroughComma e =
 skipThroughComma :: e -> Parser e s ()
 {-# inline skipThroughComma #-}
 skipThroughComma e = Latin.skipTrailedBy e ','
+
+-- Consumes the trailing comma. This doesn't validate the ip address
+-- and it only checks that the leading character could be the leading
+-- character of an ip address.
+skipIp :: e -> Parser e s ()
+skipIp e = do
+  x <- Latin.any e
+  if ((x >= '0' && x <= '9') || (x >= 'a' && x <= 'f') || x == ':')
+    then Latin.skipTrailedBy e ','
+    else P.fail e
 
 w64Comma :: e -> Parser e s Word64
 {-# inline w64Comma #-}
@@ -601,6 +626,42 @@ futureUseGField :: Field
 futureUseGField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
   where !x# = "futureUse:G"#
 
+futureUseHField :: Field
+futureUseHField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "futureUse:H"#
+
+futureUseIField :: Field
+futureUseIField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "futureUse:I"#
+
+futureUseJField :: Field
+futureUseJField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "futureUse:J"#
+
+futureUseKField :: Field
+futureUseKField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "futureUse:K"#
+
+futureUseLField :: Field
+futureUseLField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "futureUse:L"#
+
+futureUseMField :: Field
+futureUseMField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "futureUse:M"#
+
+futureUseNField :: Field
+futureUseNField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "futureUse:N"#
+
+futureUseOField :: Field
+futureUseOField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "futureUse:O"#
+
+futureUsePField :: Field
+futureUsePField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
+  where !x# = "futureUse:P"#
+
 leftoversField :: Field
 leftoversField = Field (UnmanagedBytes (Addr x#) (I# (cstringLen# x#)))
   where !x# = "framing:leftovers"#
@@ -721,6 +782,26 @@ virtualSystemIdField :: Field
 virtualSystemIdField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
   where !x# = "field:virtualsystemid"#
 
+publicIpField :: Field
+publicIpField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:public_ip"#
+
+statusField :: Field
+statusField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:status"#
+
+machineNameField :: Field
+machineNameField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:machine_name"#
+
+stageField :: Field
+stageField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:stage"#
+
+authenticationMethodField :: Field
+authenticationMethodField = Field ( UnmanagedBytes (Addr x#) (I# ( cstringLen# x#)))
+  where !x# = "field:authentication_method"#
+
 -- TODO: switch to the known-key cstrlen that comes with GHC 
 cstringLen# :: Addr# -> Int#
 {-# noinline cstringLen# #-}
@@ -729,6 +810,7 @@ cstringLen# ptr = go 0 where
     then ix#
     else go (ix + 1)
 
+-- This consumes the trailing comma
 parserOptionallyQuoted_ :: e -> Parser e s ()
 parserOptionallyQuoted_ e = Latin.any e >>= \case
   '"' -> do

@@ -13,6 +13,7 @@ import Data.Bytes.Types (Bytes(Bytes))
 
 import qualified Data.Primitive as PM
 import qualified GHC.Exts as Exts
+import qualified Panos.Syslog.GlobalProtect as GlobalProtect
 import qualified Panos.Syslog.Correlation as Correlation
 import qualified Panos.Syslog.System as System
 import qualified Panos.Syslog.Threat as Threat
@@ -69,6 +70,10 @@ main = do
   testUserA
   putStrLn "Correlation-A"
   testCorrelationA
+  putStrLn "GlobalProtect-A"
+  testGlobalProtectA
+  putStrLn "GlobalProtect-B"
+  testGlobalProtectB
   putStrLn "Finished"
 
 testA :: IO ()
@@ -351,6 +356,22 @@ testCorrelationA = case decode S.correlation_A of
   Left err -> throwIO err
   Right (LogCorrelation t) ->
     if | Correlation.objectId t /= 6005 -> fail "wrong object id"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testGlobalProtectA :: IO ()
+testGlobalProtectA = case decode S.gp_A of
+  Left err -> throwIO err
+  Right (LogGlobalProtect t) ->
+    if | GlobalProtect.status t /= bytes "success" -> fail "wrong status"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testGlobalProtectB :: IO ()
+testGlobalProtectB = case decode S.gp_B of
+  Left err -> throwIO err
+  Right (LogGlobalProtect t) ->
+    if | GlobalProtect.status t /= bytes "failure" -> fail "wrong status"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"
 

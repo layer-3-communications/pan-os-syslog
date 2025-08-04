@@ -24,6 +24,8 @@ module Sample
   , threat_prisma_C
   , system_8_1_A
   , user_A
+  , gp_A
+  , gp_B
   ) where
 
 import Data.Bytes (Bytes)
@@ -391,4 +393,27 @@ threat_9_1_B = pack $ concat
   , "4,\"used-by-malware,able-to-transfer-file,"
   , "has-known-vulnerability,tunnel-other-application,pervasive-use\","
   , ",ssl,no,no"
+  ]
+
+gp_A :: Bytes
+gp_A = pack $ concat
+  [ "<142>Sep 16 07:43:05 FOO-BAR.example.com 1,2024/09/16 07:43:04,"
+  , "029436670131,GLOBALPROTECT,0,2562,2024/09/16 07:43:04,vsys1,"
+  , "gateway-auth,login,Cookie,,jdoe,US,Big-Johns-Computer,"
+  , "192.0.2.56,0.0.0.0,0.0.0.0,0.0.0.0,de:ad:be:ef:01:23,"
+  , "NZ3A5HSG4J,6.1.0,Mac,\"Apple Mac OS X 14.5.0\",1,,,,"
+  , "success,,0,user-logon,0,ABCVPN Gateway,8203912156868205408,"
+  , "0x0,2024-09-16T07:43:05.824-05:00,auto,0,manual only,,ABC-GW,"
+  , "121,0,0,0,,ABC-FW1,1"
+  ]
+
+gp_B :: Bytes
+gp_B = pack $ concat
+  [ "<142>Sep 15 21:19:59 ABC-FW1.example.com 1,2024/09/15 "
+  , "21:19:58,029436670131,GLOBALPROTECT,0,2562,2024/09/15 "
+  , "21:19:58,vsys1,gateway-auth,login,ldap,,bigbob@example.com,"
+  , "US,debian,192.0.2.77,0.0.0.0,0.0.0.0,0.0.0.0,,,Browser,"
+  , "Linux,\"linux-64\",1,,Authentication failed: Invalid username "
+  , "or password,,failure,,0,,18,ABCVPN Gateway,8203912156868205408,"
+  , "0x0,2024-09-15T21:19:59.036-05:00,,,,,,121,0,0,0,,ABC-FW1,1"
   ]

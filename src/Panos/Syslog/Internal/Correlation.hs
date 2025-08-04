@@ -9,7 +9,6 @@
 {-# language NumericUnderscores #-}
 {-# language ScopedTypeVariables #-}
 
-
 module Panos.Syslog.Internal.Correlation
   ( Correlation(..)
   , parserCorrelation

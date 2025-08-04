@@ -45,6 +45,7 @@ library
   exposed-modules:
     Panos.Syslog
     Panos.Syslog.Correlation
+    Panos.Syslog.GlobalProtect
     Panos.Syslog.System
     Panos.Syslog.Threat
     Panos.Syslog.Traffic
@@ -55,6 +56,7 @@ library
     -- to contain them.
     Panos.Syslog.Internal.Common
     Panos.Syslog.Internal.Correlation
+    Panos.Syslog.Internal.GlobalProtect
     Panos.Syslog.Internal.System
     Panos.Syslog.Internal.Threat
     Panos.Syslog.Internal.Traffic

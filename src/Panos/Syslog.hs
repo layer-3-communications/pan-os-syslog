@@ -37,6 +37,7 @@ import Panos.Syslog.Internal.Threat (Threat(..),parserThreat)
 import Panos.Syslog.Internal.System (System(..),parserSystem)
 import Panos.Syslog.Internal.User (User(..),parserUser)
 import Panos.Syslog.Internal.Correlation (Correlation(..),parserCorrelation)
+import Panos.Syslog.Internal.GlobalProtect (GlobalProtect(..),parserGlobalProtect)
 
 import qualified Chronos
 import qualified Data.Bytes.Parser as P
@@ -52,6 +53,7 @@ data Log
   | LogSystem !System
   | LogUser !User
   | LogCorrelation !Correlation
+  | LogGlobalProtect !GlobalProtect
   | LogOther
 
 data Type
@@ -60,6 +62,7 @@ data Type
   | TypeSystem
   | TypeUser
   | TypeCorrelation
+  | TypeGlobalProtect
 
 untilSpace :: e -> Parser e s Bounds
 {-# inline untilSpace #-}
@@ -173,6 +176,7 @@ parserLog = do
     TypeSystem -> LogSystem <$!> parserSystem hostBounds receiveTime serialNumber
     TypeUser -> LogUser <$!> parserUser hostBounds receiveTime serialNumber
     TypeCorrelation -> LogCorrelation <$!> parserCorrelation hostBounds receiveTime serialNumber
+    TypeGlobalProtect -> LogGlobalProtect <$!> parserGlobalProtect hostBounds receiveTime serialNumber
 
 parserType :: Parser Field s Type
 {-# inline parserType #-}
@@ -181,6 +185,10 @@ parserType = do
     'C' -> do
       Latin.char11 typeField 'O' 'R' 'R' 'E' 'L' 'A' 'T' 'I' 'O' 'N' ','
       pure TypeCorrelation
+    'G' -> do
+      Latin.char11 typeField 'L' 'O' 'B' 'A' 'L' 'P' 'R' 'O' 'T' 'E' 'C'
+      Latin.char2 typeField 'T' ','
+      pure TypeGlobalProtect
     'U' -> do
       Latin.char6 typeField 'S' 'E' 'R' 'I' 'D' ','
       pure TypeUser
