@@ -53,6 +53,7 @@ data GlobalProtect = GlobalProtect
   , publicIp :: {-# UNPACK #-} !IPv4
   , status :: {-# UNPACK #-} !Bounds
   , eventId :: {-# UNPACK #-} !Bounds
+  , description :: {-# UNPACK #-} !Bytes
   }
 
 parserGlobalProtect :: Bounds -> Datetime -> Bounds -> Parser Field s GlobalProtect
@@ -83,7 +84,7 @@ parserGlobalProtect !syslogHost receiveTime !serialNumber = do
   skipDigitsThroughComma futureUseMField -- repetition count
   skipThroughComma futureUseNField -- reason
   skipThroughComma futureUseOField -- error
-  skipThroughComma futureUsePField -- description
+  description <- parserOptionallyQuoted futureUsePField
   status <- untilComma statusField
   -- Assert that the status is either "success" or "failure" to help
   -- make sure that we have not lost track of our position.
@@ -107,5 +108,6 @@ parserGlobalProtect !syslogHost receiveTime !serialNumber = do
     , machineName
     , publicIp
     , status
+    , description
     }
 

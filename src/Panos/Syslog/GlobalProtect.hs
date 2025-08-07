@@ -21,6 +21,7 @@ module Panos.Syslog.GlobalProtect
   , publicIp
   , status
   , eventId
+  , description
   ) where
 
 import Chronos (Datetime)
@@ -85,3 +86,6 @@ machineName (GlobalProtect{machineName=Bounds off len,message=msg}) =
 
 publicIp :: GlobalProtect -> IPv4
 publicIp u = u.publicIp
+
+description :: GlobalProtect -> Bytes
+description u = u.description
