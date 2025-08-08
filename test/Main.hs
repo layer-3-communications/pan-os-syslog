@@ -74,6 +74,8 @@ main = do
   testGlobalProtectA
   putStrLn "GlobalProtect-B"
   testGlobalProtectB
+  putStrLn "GlobalProtect-IETF-A"
+  testGlobalProtectIetfA
   putStrLn "Finished"
 
 testA :: IO ()
@@ -372,6 +374,14 @@ testGlobalProtectB = case decode S.gp_B of
   Left err -> throwIO err
   Right (LogGlobalProtect t) ->
     if | GlobalProtect.status t /= bytes "failure" -> fail "wrong status"
+       | otherwise -> pure ()
+  Right _ -> fail "wrong log type"
+
+testGlobalProtectIetfA :: IO ()
+testGlobalProtectIetfA = case decode S.gp_ietf_A of
+  Left err -> throwIO err
+  Right (LogGlobalProtect t) ->
+    if | GlobalProtect.status t /= bytes "success" -> fail "wrong status"
        | otherwise -> pure ()
   Right _ -> fail "wrong log type"
 

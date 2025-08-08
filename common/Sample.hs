@@ -26,6 +26,7 @@ module Sample
   , user_A
   , gp_A
   , gp_B
+  , gp_ietf_A
   ) where
 
 import Data.Bytes (Bytes)
@@ -416,4 +417,14 @@ gp_B = pack $ concat
   , "Linux,\"linux-64\",1,,Authentication failed: Invalid username "
   , "or password,,failure,,0,,18,ABCVPN Gateway,8203912156868205408,"
   , "0x0,2024-09-15T21:19:59.036-05:00,,,,,,121,0,0,0,,ABC-FW1,1"
+  ]
+
+gp_ietf_A :: Bytes
+gp_ietf_A = pack $ concat
+  [ "<14>1 2025-08-08T13:06:30-04:00 foo-example1 - - - -  1,2025/08/08 "
+  , "13:06:30,023001028247,GLOBALPROTECT,0,2562,2025/08/08 13:06:30,vsys1,"
+  , "portal-prelogin,before-login,saml,,,US,,192.0.2.26,0.0.0.0,0.0.0.0,"
+  , "0.0.0.0,,,Browser,Browser,,1,,,\"SAML request sent\",success,,0,,0,"
+  , "GP_Prod,7591924912046022975,0x0,2025-08-08T13:06:30.656-04:00,"
+  , ",,,,,241,173,0,0,,foo-example1,1"
   ]
