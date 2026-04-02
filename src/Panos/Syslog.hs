@@ -105,7 +105,7 @@ parserPrefix = do
       Latin.skipTrailedBy syslogPriorityField '>'
       Latin.skipChar ' '
     False -> pure ()
-  Latin.trySatisfy (== '1') >>= \case
+  Latin.trySatisfy (\c -> c == '1' || c == '0') >>= \case
     True -> do
       Latin.any futureUseDField >>= \case
         ',' -> do
